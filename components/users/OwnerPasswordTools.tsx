@@ -1,0 +1,18 @@
+/* ── Component: Owner-only reveal/copy/reset; secrets stay in short-lived component state ── */
+"use client";
+import {useEffect,useState} from "react";
+import {Eye,EyeOff,Copy,KeyRound} from "lucide-react";
+import {useAuth} from "@/providers/AuthProvider";
+import {adminFetch} from "@/lib/adminFetch";
+import {notify} from "@/lib/feedback";
+import SetupDialog from "@/components/setup/SetupDialog";
+import PasswordInput from "@/components/ui/PasswordInput";
+export default function OwnerPasswordTools({id,name,isOwner,reload}:{id:string;name:string;isOwner:boolean;reload:()=>Promise<void>}){
+ const {user}=useAuth();const [password,setPassword]=useState(""),[busy,setBusy]=useState(false),[editing,setEditing]=useState(false),[draft,setDraft]=useState("");
+ useEffect(()=>{if(!password)return;const hide=()=>{if(document.hidden)setPassword("");};document.addEventListener("visibilitychange",hide);const timer=setTimeout(()=>setPassword(""),60000);return()=>{clearTimeout(timer);document.removeEventListener("visibilitychange",hide);};},[password]);
+ if(user.role!=="owner"||user.roleId)return null;
+ if(isOwner)return <span className="muted text-xs">Use My account</span>;
+ async function reveal(){if(password){setPassword("");return;}setBusy(true);try{const r=await adminFetch(`/api/users/${id}/password/reveal`,{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"});const data=await r.json();if(!r.ok)throw Error(data.error);setPassword(data.password);}catch(e){notify(e instanceof Error?e.message:"Could not view password","error");}finally{setBusy(false);}}
+ async function copy(){try{await navigator.clipboard.writeText(password);notify("Password copied. Share it only with this employee.");}catch{notify("Could not copy. Use a secure HTTPS connection and try again.","error");}}
+ return <><div className="flex flex-col items-start gap-2"><div className="resource-actions"><button type="button" className="row-action" disabled={busy} aria-label={`${password?"Hide":"View"} password for ${name}`} onClick={()=>void reveal()}>{password?<EyeOff size={14}/>:<Eye size={14}/>}<span>{password?"Hide":"View"}</span></button><button type="button" className="row-action" disabled={!password||busy} title="View the password first" aria-label={`Copy password for ${name}`} onClick={()=>void copy()}><Copy size={14}/>Copy</button><button type="button" className="row-action" disabled={busy} onClick={()=>{setPassword("");setDraft("");setEditing(true);}}><KeyRound size={14}/>Change</button></div>{password&&<span className="select-text rounded-md border border-amber-400/20 bg-amber-400/5 px-2 py-1 font-mono text-sm text-amber-200">{password}</span>}</div>{editing&&<SetupDialog title={`Change password · ${name}`} busy={busy} close={()=>{setEditing(false);setDraft("");}}><form onSubmit={async e=>{e.preventDefault();setBusy(true);try{const next=draft;const response=await adminFetch(`/api/users/${id}`,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:next})});const data=await response.json();if(!response.ok)throw Error(data.error);setEditing(false);setDraft("");setPassword(next);await reload();}catch(e){notify(e instanceof Error?e.message:"Could not change password","error");}finally{setBusy(false);}}}><p className="info-note">All current sessions for this employee will end. At least 6 characters are required.</p><label>New password<PasswordInput name="password" value={draft} onChange={e=>setDraft(e.target.value)} minLength={6} maxLength={72} required autoComplete="new-password"/></label><button type="submit" className="primary" disabled={busy}>{busy?"Saving…":"Save new password"}</button></form></SetupDialog>}</>;
+}
