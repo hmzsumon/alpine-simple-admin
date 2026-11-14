@@ -1,0 +1,5 @@
+/* ────────── one authenticated stream per tab, reconnect and focus recovery ────────── */
+"use client";
+import {usePathname} from "next/navigation";
+import {useEffect} from "react";
+export default function LiveUpdates(){const pathname=usePathname();useEffect(()=>{if(pathname==="/login")return;let timer:ReturnType<typeof setTimeout>|undefined;const refresh=()=>{if(timer)return;timer=setTimeout(()=>{timer=undefined;window.dispatchEvent(new Event("alpine:data-changed"));},100);};const source=new EventSource("/api/events");source.addEventListener("connected",refresh);source.addEventListener("changed",refresh);source.addEventListener("session-ended",()=>{source.close();window.dispatchEvent(new Event("alpine:data-changed"));});window.addEventListener("focus",refresh);const recover=setInterval(()=>{if(source.readyState!==EventSource.OPEN)refresh();},15000);return()=>{source.close();clearInterval(recover);if(timer)clearTimeout(timer);window.removeEventListener("focus",refresh);};},[pathname]);return null;}

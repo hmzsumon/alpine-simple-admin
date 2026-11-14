@@ -1,0 +1,2 @@
+import {redirect} from "next/navigation";import {currentUser} from "@/lib/server/api";import DailyReport from "@/components/cash/DailyReport";
+export default async function Page({params}:{params:{date:string}}){const user=await currentUser();if(!user)redirect("/login");if(!user.permissions.includes("reports:read"))redirect("/orders");return <main className="mx-auto max-w-[1200px] p-5 md:p-10"><DailyReport date={params.date} print/></main>;}

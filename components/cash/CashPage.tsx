@@ -1,0 +1,16 @@
+"use client";
+import {useState} from "react";
+import Link from "next/link";
+import {useAuth} from "@/providers/AuthProvider";
+import {useCashCounter} from "@/hooks/useCashCounter";
+import CashNotice from "./CashNotice";
+import OpenDayForm from "./OpenDayForm";
+import CashSummary from "./CashSummary";
+import CashMovementForm from "./CashMovementForm";
+import CashHandoverPanel from "./CashHandoverPanel";
+import CloseDayForm from "./CloseDayForm";
+import {taka} from "@/utils/cashFormat";
+import "./simple-cash.css";
+export default function CashPage(){const [selected,setSelected]=useState<string>(),counter=useCashCounter(selected),{user,can}=useAuth(),day=counter.data?.day,owns=day?.custodianId===user.id&&!day.pending;
+ return <div><div className="simple-top"><div><span className="simple-badge">ALPINE SIMPLE · Local</span><h2>Cash register</h2><p>Sales, bill collection, cash movements and handovers in one place.</p></div><Link className="primary" href="/orders">Orders / collect bills</Link></div><section className="panel simple-section"><label>Cash counter<select value={counter.data?.counter.id||selected||"main"} onChange={e=>setSelected(e.target.value)}>{counter.data?.counters.filter(c=>c.active).map(c=><option key={c.id} value={c.id}>{c.code} · {c.name}{c.assignedCashierName?" · "+c.assignedCashierName:""}</option>)}</select></label></section><CashNotice counter={counter}/>{!counter.data?<p className="info-note">Loading cash counter...</p>:!day?can("cash:operate")?<OpenDayForm key={counter.data.counter.id} counter={counter}/>:<p className="info-note">The day is closed.</p>:<><div className="simple-day"><strong>{counter.data?.counter.name} · {day.id} · Day open</strong><span>Custodian: {day.custodianName}</span><Link href={`/cash-print/${day.id}/opening?counterId=${encodeURIComponent(counter.data?.counter.id||"main")}`} target="_blank" className="text-button">Opening float slip</Link></div><CashSummary data={counter.data}/><CashHandoverPanel counter={counter}/>{owns&&can("cash:operate")&&<><CashMovementForm counter={counter}/><CloseDayForm counter={counter}/></>}<section className="panel simple-section"><h3>Cash-in and payout history</h3><div className="table-scroll"><table><thead><tr><th>Voucher / time</th><th>Paid to / received from</th><th>Reason</th><th>Amount</th><th>Cash remaining</th><th>Print</th></tr></thead><tbody>{[...day.movements].reverse().map(m=><tr key={m.id}><td>{m.no}<small className="item-note">{new Date(m.at).toLocaleTimeString("en-GB")}</small></td><td>{m.party}</td><td>{m.purpose}<small className="item-note">{m.note}</small></td><td>{m.kind==="out"?"−":"+"}{taka(m.cents)}</td><td>{taka(m.balanceAfterCents)}</td><td><Link target="_blank" href={`/cash-print/${day.id}/${m.id}?counterId=${encodeURIComponent(counter.data?.counter.id||"main")}`}>View receipt</Link></td></tr>)}</tbody></table>{!day.movements.length&&<p className="simple-empty">No cash deposits or payouts yet.</p>}</div></section><section className="panel simple-section"><h3>Cashier handover history</h3>{[...day.handovers].reverse().map(h=><p key={h.id}>{h.fromName} → {h.toName} · {taka(h.countedCents)} · {h.acceptedAt?"Accepted":"Cancelled"} · <Link href={`/cash-print/${day.id}/${h.id}?counterId=${encodeURIComponent(counter.data?.counter.id||"main")}`} target="_blank">Receipt / signatures</Link></p>)}</section></>}</div>;
+}
