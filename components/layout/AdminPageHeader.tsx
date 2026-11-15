@@ -4,14 +4,17 @@
 /* ────────── imports ────────── */
 import { useAuth } from "@/providers/AuthProvider";
 import { useAdminContext } from "@/context/AdminContext";
+import {usePathname} from "next/navigation";
 import { Plus } from "lucide-react";
 import { heading } from "@/config/admin";
 
 export default function AdminPageHeader() {
   const { can } = useAuth();
+  const pathname=usePathname();
   /* ────────── workspace state ────────── */
   const { page, mode, busy, openOrder } = useAdminContext();
 
+  if(pathname==="/orders/new")return null;
   if(["Counter setup","Overview","Cash register","Payment methods","Sales & closing reports"].includes(page))return null;
   return (
     <div className="page-heading">

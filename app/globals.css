@@ -1772,3 +1772,9 @@ input[aria-invalid="true"],select[aria-invalid="true"],textarea[aria-invalid="tr
     .erp-page-heading h1 { @apply text-xl; }
   }
 }
+
+/* ────────── full-page cashier order entry ────────── */
+.order-page-form { @apply space-y-4; }
+.order-page-form .form-grid { @apply grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3; }
+.order-page-form fieldset { @apply m-0 min-w-0 border-0 p-0; }
+.order-page-form .order-summary { @apply sticky bottom-3 z-10 rounded-xl border border-emerald-500/20 bg-[#1e1e2d] p-4 shadow-lg; }

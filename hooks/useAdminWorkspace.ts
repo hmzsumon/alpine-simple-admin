@@ -237,8 +237,11 @@ export function useAdminWorkspace() {
     setAppendOrderId(existingId || null);
     setCart({});
     setSearch("");
-    setModal("order");
     setOrderTable(table || tables[0]?.id || "");
+    if(existingId){setModal("order");return;}
+    setModal(null);
+    const query=table?"?"+new URLSearchParams({table}).toString():"";
+    router.push("/orders/new"+query);
   };
 
   const [appendOrderId, setAppendOrderId] = useState<string | null>(null);
