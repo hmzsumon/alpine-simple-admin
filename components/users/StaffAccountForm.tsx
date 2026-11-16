@@ -29,7 +29,7 @@ export default function StaffAccountForm({ staff, roles, busy, save, cancel }: {
     <label>Role<SearchableSelect name="role" value={selectedRole} onChange={e => setSelectedRole(e.target.value)}>{roles.filter((r) => r.active).map((r) => <option key={r.id} value={r.id}>{r.name}{r.builtin ? "" : " · Custom"}</option>)}</SearchableSelect></label>
     {(!staff||user.role==="owner"&&!user.roleId)&&<label>{staff ? "New password (leave blank to keep current)" : "Password"}<PasswordInput name="password" required={!staff} minLength={minimum} maxLength={72} autoComplete="new-password" /><small className="item-note">At least {minimum} characters; longer passwords are allowed.</small></label>}
     <label>Order routing / default cash counter<SearchableSelect name="counterId" defaultValue={staff?.counterId||"main"}>{counters.filter(c=>c.active).map(c=><option key={c.id} value={c.id}>{c.code} · {c.name}</option>)}</SearchableSelect><small className="item-note">Orders from this waiter go to this counter. Cash custody is assigned separately when opening or handing over the drawer.</small></label>
-    <p className="mb-4 rounded-lg border border-emerald-400/20 bg-emerald-400/5 p-3 text-xs text-emerald-200">Waiters can take orders at every table on every floor. No table assignment is required.</p>
+    <p className="mb-4 rounded-lg border border-emerald-400/20 bg-emerald-400/5 p-3 text-xs text-emerald-200">Waiters take orders without selecting a table. Bills are identified by their invoice number.</p>
     <div className="assignment-tools"><button className="primary" disabled={busy}>{staff ? "Save changes" : "Create employee"}</button>{cancel && <button type="button" className="secondary" onClick={cancel}>Disable</button>}</div>
   </form>;
 }

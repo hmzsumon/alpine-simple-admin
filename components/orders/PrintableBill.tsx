@@ -26,7 +26,7 @@ export default function PrintableBill({ order, printedBy, previewAt,paper="therm
       <header><h1>Alpine Restaurant</h1><p>Chowhatta, Sylhet-3100</p><p>Mobile: 01715-19 55 50</p></header>
       <div className="bill-status">{cancelled ? "CANCELLED - not payable" : paid ? "Paid" : "Unpaid bill"}</div>
       <dl className="bill-meta">
-        <div><dt>{order.orderType === "takeaway" ? "Parcel" : "Table"}</dt><dd>{orderLabel(order)}</dd></div>
+        {order.table!=="WALK-IN"&&<div><dt>{order.orderType === "takeaway" ? "Parcel" : "Table"}</dt><dd>{orderLabel(order)}</dd></div>}
         <div><dt>Counter</dt><dd>{order.simpleCounterName||"Main counter"}</dd></div><div className="bill-meta-wide"><dt>Invoice</dt><dd>{order.simpleBillNo||order.id}</dd></div>
         <div className="bill-meta-wide"><dt>Date / time</dt><dd>{date(order.createdAt)}</dd></div>
         <div><dt>Type</dt><dd>{channelName(order.salesChannel)}</dd></div>{order.externalOrderId&&<div className="bill-meta-wide"><dt>Foodpanda ref.</dt><dd>{order.externalOrderId}</dd></div>}<div><dt>Waiter</dt><dd>{order.waiter}</dd></div>
