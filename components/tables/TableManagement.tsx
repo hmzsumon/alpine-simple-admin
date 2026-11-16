@@ -28,7 +28,7 @@ export default function TableManagement() {
       const current = active.filter((o) => o.table === table.id);
       return <article key={table.id} className={`table-card resource-table-card ${current.length ? "occupied" : ""}`}>
         <div><Table2 size={23} /><span className={`badge ${current.length ? "Preparing" : "Ready"}`}>{current.length ? "Occupied" : "Available"}</span></div>
-        <h3>{table.name}</h3><p>{table.id} · {table.floor} · {data.halls?.find(h=>h.id===table.hallId)?.name||"Hall not assigned"} · {table.seats} Seats</p>
+        <h3>{table.name}</h3><p>{table.floor} · {data.halls?.find(h=>h.id===table.hallId)?.name||"Hall not assigned"} · {table.seats} Seats</p>
         <footer>{current.length ? `${current.length} Order · ${money(current.reduce((s, o) => s + total(o), 0))}` : "Available for new orders"}</footer>
         <div className="resource-actions">{can("orders:create") && <button type="button" className="secondary" disabled={busy} onClick={() => openOrder(table.id)}><Plus size={15} /> Order</button>}{can("tables:manage") && <><button type="button" className="text-button" disabled={busy || mode !== "database"} onClick={() => setEditing(table)}><Pencil size={14} /> Edit</button><button type="button" className="text-button danger-text" disabled={busy || mode !== "database" || !!current.length} title={current.length ? "Settle open orders first" : "Delete table"} onClick={async () => {
           if (!await confirmAction(`“${table.name}” (${table.id}) Delete table ? Historical orders are retained and this code cannot be reused.`)) return;
@@ -37,8 +37,8 @@ export default function TableManagement() {
       </article>;
     })}</div>
     {!tables.length && <p className="info-note">No tables yet. Add a table under a hall; every waiter can use it.</p>}
-    {editing !== undefined && <SetupDialog title={editing ? "Edit table" : "New table"} busy={busy} close={close}><ResourceForm halls={data.halls} kind="table" value={editing || undefined} suggestedId={`T-${String(nextNumber).padStart(2, "0")}`} busy={busy} submit={async (entry) => {
-      if (tables.some((t) => t.id !== editing?.id && (t.id === entry.id || t.name.toLowerCase() === entry.name.toLowerCase()))) { setNotice("A table already uses this code or name. Choose another."); return false; }
+    {editing !== undefined && <SetupDialog title={editing ? "Edit table" : "New table"} busy={busy} close={close}><ResourceForm tables={tables} initialHallId={hallFilter==="all"?"":hallFilter} halls={data.halls} kind="table" value={editing || undefined} suggestedId={`T-${String(nextNumber).padStart(2, "0")}`} busy={busy} submit={async (entry) => {
+      if (tables.some((t) => t.id !== editing?.id && (t.id === entry.id || t.hallId===entry.hallId && t.name.toLowerCase() === entry.name.toLowerCase()))) { setNotice("This hall already has a table with this number/name. Choose another."); return false; }
       const saved = await save({ ...data, tables: editing ? tables.map((t) => t.id === editing.id ? entry : t) : [...tables, entry] });
       if (saved) { close(); setNotice("Table saved. All waiters can use it."); } return saved;
     }} /></SetupDialog>}

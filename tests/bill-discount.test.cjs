@@ -7,3 +7,5 @@ test('no-discount bill omits Discount, Due and footer while preserving payment d
 test('discounted bill prints the discount only when applied and net payable agrees',()=>{const discounted={...order,discountCents:2000,payments:[{totalCents:30000,allocations:[{name:'Cash',kind:'cash',cents:30000}]}]};const html=print(discounted);assert.equal(total(discounted),300);assert.ok(html.includes('Discount'));assert.ok(html.includes('-20.00'));assert.ok(html.includes('300.00'));assert.equal(print({...discounted,discountCents:0}).includes('Discount'),false);assert.equal(html.includes('>Due<'),false);});
 
 test('table-free bill omits physical table metadata and retains the invoice',()=>{const html=print({...order,table:'WALK-IN',simpleBillNo:'B-NO-TABLE-1'});assert.equal(html.includes('<dt>Table</dt>'),false);assert.equal(html.includes('WALK-IN'),false);assert.ok(html.includes('B-NO-TABLE-1'));});
+
+test("hall and local table number distinguish shared-counter bills",()=>{const html=print({...order,table:"T-11",tableName:"1",hallName:"Gents Hall"});assert.ok(html.includes("Gents Hall · 1"));assert.equal(html.includes("T-11"),false);});

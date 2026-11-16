@@ -7,4 +7,4 @@ export const total = (order: Order) =>
   Math.max(0,order.items.reduce((sum,item)=>sum+Math.round(item.price*100)*item.quantity,0)+Math.round((order.packingCharge||0)*100)-(order.discountCents||0))/100;
 
 export const paidOrder = (order: Order) => order.paymentStatus === "paid" || order.status === "Paid";
-export const orderLabel = (order: Order) => order.parcelToken || (order.table==="WALK-IN"?(order.simpleBillNo||"Counter order"):order.table);
+export const orderLabel = (order: Order) => order.parcelToken || (order.table==="WALK-IN"?(order.simpleBillNo||"Counter order"):`${order.hallName?order.hallName+" · ":""}${order.tableName||order.table}`);

@@ -1,0 +1,1 @@
+export function nextHallTableNumber(tables:{hallId?:string;name:string}[],hallId:string){return String(1+Math.max(0,...tables.filter(t=>t.hallId===hallId).map(t=>{const name=t.name.replace(/[০-৯]/g,c=>String("০১২৩৪৫৬৭৮৯".indexOf(c)));return /^\d+$/.test(name)?Number(name):0;})));}
