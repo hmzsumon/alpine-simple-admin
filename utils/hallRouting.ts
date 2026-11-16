@@ -1,0 +1,2 @@
+/* Logical hall counters resolve to one active shared drawer. */
+export function operatingCounter<T extends {id:string;active:boolean;deleted?:boolean;fallbackCounterId?:string}>(counters:T[],id?:string):T|undefined{const seen=new Set<string>();let c=counters.find(c=>c.id===id&&!c.deleted);while(c&&!c.active){if(seen.has(c.id))return undefined;seen.add(c.id);c=counters.find(v=>v.id===c!.fallbackCounterId&&!v.deleted);}return c;}

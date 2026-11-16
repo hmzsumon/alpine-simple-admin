@@ -4,6 +4,7 @@ import type { AppData } from "@/types";
 export type WorkspaceResult = {
   data: AppData;
   revision: number;
+  orderEpoch?:number;
   mode: "database";
 };
 /* ────────── authenticated MongoDB workspace ────────── */

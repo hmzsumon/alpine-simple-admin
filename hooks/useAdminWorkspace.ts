@@ -20,6 +20,7 @@ export function useAdminWorkspace() {
   const tables = data.tables ?? defaultTables;
   const kitchens = data.kitchens ?? defaultKitchens;
   const stationName = (id: string) => kitchens.find((k) => k.id === id)?.name || id;
+  const [orderEpoch,setOrderEpoch]=useState(0);
   const [revision, setRevision] = useState(0);
   const readVersion = useRef(0);
 
@@ -54,7 +55,7 @@ export function useAdminWorkspace() {
       .then((result) => {
         if (alive && version === readVersion.current) {
           setData(result.data);
-          setRevision(result.revision);
+          setRevision(result.revision); if(result.orderEpoch!==undefined)setOrderEpoch(result.orderEpoch);
           setMode(result.mode);
         }
       })
@@ -79,14 +80,14 @@ export function useAdminWorkspace() {
   async function refreshWorkspace() {
     const version = ++readVersion.current;
     const result = await loadWorkspace();
-    if (version === readVersion.current) { setData(result.data); setRevision(result.revision); setMode(result.mode); }
+    if (version === readVersion.current) { setData(result.data); setRevision(result.revision); if(result.orderEpoch!==undefined)setOrderEpoch(result.orderEpoch); setMode(result.mode); }
   }
   // Refresh live availability without replacing a form's in-progress edits.
   useEffect(() => {
     if (modal || busy) return;
     let alive = true;
     const timer = setInterval(() => { const version = ++readVersion.current; void loadWorkspace().then((result) => {
-      if (alive && version === readVersion.current) { setData(result.data); setRevision(result.revision); setMode(result.mode); }
+      if (alive && version === readVersion.current) { setData(result.data); setRevision(result.revision); if(result.orderEpoch!==undefined)setOrderEpoch(result.orderEpoch); setMode(result.mode); }
     }).catch(() => {}); }, 15000);
     return () => { alive = false; clearInterval(timer); };
   }, [modal, busy]);
@@ -100,7 +101,7 @@ export function useAdminWorkspace() {
     try {
       const result = await persistWorkspace(next, data, revision);
       setData(result.data);
-      setRevision(result.revision);
+      setRevision(result.revision); if(result.orderEpoch!==undefined)setOrderEpoch(result.orderEpoch);
       return true;
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Unable to save");
@@ -254,6 +255,7 @@ export function useAdminWorkspace() {
     paid,
     page,
     data,
+    orderEpoch,
     mode,
     notice,
     setNotice,

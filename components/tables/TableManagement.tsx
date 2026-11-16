@@ -13,15 +13,17 @@ import type { RestaurantTable } from "@/types";
 export default function TableManagement() {
   const { can } = useAuth();
   const { data, tables, floor, setFloor, active, openOrder, save, busy, mode, setNotice } = useAdminContext();
+  const [hallFilter,setHallFilter]=useState("all");
   const [editing, setEditing] = useState<RestaurantTable | null | undefined>();
   const close = useCallback(() => setEditing(undefined), []);
   const floors = [...new Set(tables.map((t) => t.floor))];
-  const visible = floor === "All floors" || !floors.includes(floor) ? tables : tables.filter((t) => t.floor === floor);
+  const visible = tables.filter(t=>(floor==="All floors"||!floors.includes(floor)||t.floor===floor)&&(hallFilter==="all"||t.hallId===hallFilter));
   const nextNumber = Math.max(0, ...[...tables.map((t) => t.id), ...(data.retiredTableIds || [])].map((id) => Number(id.slice(2)))) + 1;
   return <>
     <HallManagement/>
     <div className="resource-toolbar"><div><h2>Manage tables</h2><p className="muted">{tables.length}tables · {floors.length}floors</p></div>{can("tables:manage") && <button type="button" className="primary" disabled={busy || mode !== "database"} onClick={() => setEditing(null)}><Plus size={17} /> New table</button>}</div>
     <div className="filters floor-filters">{["All floors", ...floors].map((f) => <button type="button" key={f} className={(floor === f || (f === "All floors" && !floors.includes(floor))) ? "primary" : "secondary"} onClick={() => setFloor(f)}>{f === "All floors" ? "All floors" : f}</button>)}</div>
+    <div className="my-4 flex flex-wrap gap-2">{[{id:"all",name:"All halls"},...(data.halls||[])].map(h=><button key={h.id} className={hallFilter===h.id?"primary":"secondary"} onClick={()=>setHallFilter(h.id)}>{h.name}</button>)}</div>
     <div className="table-grid">{visible.map((table) => {
       const current = active.filter((o) => o.table === table.id);
       return <article key={table.id} className={`table-card resource-table-card ${current.length ? "occupied" : ""}`}>
@@ -34,11 +36,11 @@ export default function TableManagement() {
         }}><Trash2 size={14} /> Delete</button></>}</div>
       </article>;
     })}</div>
-    {!tables.length && <p className="info-note">No tables yet. Add tables and assign them to waiters.</p>}
+    {!tables.length && <p className="info-note">No tables yet. Add a table under a hall; every waiter can use it.</p>}
     {editing !== undefined && <SetupDialog title={editing ? "Edit table" : "New table"} busy={busy} close={close}><ResourceForm halls={data.halls} kind="table" value={editing || undefined} suggestedId={`T-${String(nextNumber).padStart(2, "0")}`} busy={busy} submit={async (entry) => {
       if (tables.some((t) => t.id !== editing?.id && (t.id === entry.id || t.name.toLowerCase() === entry.name.toLowerCase()))) { setNotice("A table already uses this code or name. Choose another."); return false; }
       const saved = await save({ ...data, tables: editing ? tables.map((t) => t.id === editing.id ? entry : t) : [...tables, entry] });
-      if (saved) { close(); setNotice("Table saved. Assign it to waiters in Staff & permissions."); } return saved;
+      if (saved) { close(); setNotice("Table saved. All waiters can use it."); } return saved;
     }} /></SetupDialog>}
   </>;
 }

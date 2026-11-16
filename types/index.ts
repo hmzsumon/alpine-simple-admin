@@ -52,7 +52,7 @@ export type Printer = {
   enabled: boolean;
 };
 export type AppData = {
-  halls?: {id:string;name:string;floor:string}[];
+  halls?: {id:string;name:string;floor:string;counterId?:string}[];
   tables?: RestaurantTable[];
   kitchens?: Kitchen[];
   retiredTableIds?: string[];
