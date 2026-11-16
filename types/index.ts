@@ -18,7 +18,7 @@ export type MenuItem = {
   active: boolean;
   note?: string;
 };
-export type Order = {
+export type Order = { bookingState?:"booking"|"final";bookingRevision?:number;
   floorName?:string; hallId?:string; hallName?:string;tableName?:string;
   simpleDayId?:string;simpleCounterId?:string;simpleCounterName?:string;salesChannel?:"dine_in"|"takeaway"|"foodpanda";externalOrderId?:string;simpleBillNo?:string;payments?:import("@/types/simpleCash").BillPayment[];
   orderType?: "dine_in" | "takeaway"; parcelToken?: string; customerName?: string; customerPhone?: string; packingCharge?: number;
@@ -65,4 +65,5 @@ export type AppData = {
   printers: Printer[];
   expenses: { id: string; name: string; amount: number; date: string }[];
 };
+
 
