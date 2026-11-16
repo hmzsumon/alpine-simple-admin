@@ -18,7 +18,8 @@ export const routePermissions: Record<string, Permission> = {
   "/users": "users:manage",
 };
 export function canAccessPath(user: AuthUser, path: string) {
-  // Employee detail routes inherit the same users:manage guard as the directory.
+  // Employee profiles are role restricted even if cashier permissions are delegated.
+  if (/^\/users\/[^/]+$/.test(path))return user.role==="owner"||user.role==="admin";
   if (["/developer","/inventory","/procurement","/procurement-print","/kitchen","/printers","/expenses"].some(base=>path===base||path.startsWith(base+"/")))return false;
   const route = Object.keys(routePermissions).sort((a,b)=>b.length-a.length).find(
     (base) => path === base || path.startsWith(base + "/")
@@ -36,4 +37,5 @@ export function landingPath(user: AuthUser) {
     ) || "/profile"
   );
 }
+
 
