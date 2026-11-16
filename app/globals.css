@@ -1780,7 +1780,7 @@ input[aria-invalid="true"],select[aria-invalid="true"],textarea[aria-invalid="tr
 .order-page-form .order-summary { @apply sticky bottom-3 z-10 rounded-xl border border-emerald-500/20 bg-[#1e1e2d] p-4 shadow-lg; }
 
 /* ────────── compact familiar counter entry, with full keyboard focus visibility ────────── */
-.counter-entry label { @apply block text-[11px] font-medium text-slate-300; }
+.counter-entry label { @apply mb-0 block text-[11px] font-medium text-slate-300; }
 .counter-entry label > input,.counter-entry label > select,.counter-entry label > .search-select,.counter-entry label > div { @apply mt-1.5 w-full; }
 .counter-entry input,.counter-entry select { @apply min-h-[39px] text-xs; }
 .counter-entry input:focus-visible,.counter-entry button:focus-visible,.counter-entry select:focus-visible { @apply outline outline-2 outline-offset-2 outline-emerald-400; }
@@ -1789,3 +1789,5 @@ input[aria-invalid="true"],select[aria-invalid="true"],textarea[aria-invalid="tr
 .counter-entry th,.counter-entry td { @apply px-3 py-2.5 text-xs; }
 .counter-entry table { @apply min-w-[800px]; }
 .counter-entry .search-select-trigger { @apply min-h-[39px] text-xs; }
+
+.counter-entry .counter-entry-add { @apply m-0 inline-flex h-[42px] min-h-[42px] items-center justify-center gap-1.5 self-end py-0 leading-none; }
