@@ -1,0 +1,30 @@
+"use client";
+import {useLiveEffect} from "./useLiveEffect";
+/* ────────── counter order persistence: preserve exact pending payload after an uncertain response ────────── */
+
+import {useEffect,useRef,useState} from "react";
+import {adminFetch} from "@/lib/adminFetch";
+import {notify} from "@/lib/feedback";
+import {useAuth} from "@/providers/AuthProvider";
+import {useAdminContext} from "@/context/AdminContext";
+import type {CashCounter} from "@/types/simpleCash";
+import {counterTotal,type CounterLine} from "@/utils/counterEntry";
+interface Pending {path:string;body:Record<string,unknown>;}
+export function useCounterOrder(initialTable?:string){
+ const {user}=useAuth(),{data,refreshWorkspace}=useAdminContext();
+ const [counterId,setCounterId]=useState(user.counterId||"main"),[waiterId,setWaiterId]=useState(""),[table,setTable]=useState(initialTable==="PARCEL"?"":initialTable||""),[channel,setChannel]=useState(initialTable==="PARCEL"?"takeaway":"dine_in"),[lines,setLines]=useState<CounterLine[]>([]),[charge,setCharge]=useState("0"),[customer,setCustomer]=useState(""),[phone,setPhone]=useState(""),[external,setExternal]=useState("");
+ const [counters,setCounters]=useState<CashCounter[]>([]),[waiters,setWaiters]=useState<{id:string;name:string;phone:string}[]>([]),[busy,setBusy]=useState(false),[uncertain,setUncertain]=useState(false),[invalidPending,setInvalidPending]=useState(false),[saved,setSaved]=useState(false),[loading,setLoading]=useState(true),[loadError,setLoadError]=useState("");
+ const pending=useRef<Pending|null>(null),key="alpine-simple-order-pending:"+user.id;
+ useLiveEffect(()=>{let alive=true;Promise.all([adminFetch("/api/simple/counters"),adminFetch("/api/simple/order-waiters")]).then(async([c,w])=>{const [cd,wd]=await Promise.all([c.json().catch(()=>({error:"Could not load cash counters. Reload the page."})),w.json().catch(()=>({error:"Could not load counter waiters. Reload the page."}))]);if(!c.ok||!w.ok)throw Error(cd.error||wd.error||"Could not load counter staff");if(alive){setCounters(cd.counters);setWaiters(wd.waiters);setLoadError("");}}).catch(e=>{if(alive)setLoadError(e.message);}).finally(()=>{if(alive)setLoading(false);});return()=>{alive=false;};},[]);
+ useEffect(()=>{try{const raw=sessionStorage.getItem(key);if(!raw)return;const value=JSON.parse(raw);if(!value||typeof value.path!=="string"||!value.body||typeof value.body.requestId!=="string"||!Array.isArray(value.body.items))throw Error();pending.current=value;setUncertain(true);const body=value.body;setCounterId(body.counterId||"main");setTable(body.table==="PARCEL"?"":body.table||"");setChannel(body.salesChannel||body.orderType||"dine_in");setWaiterId(body.waiterId||"self");setCharge(String(body.packingCharge||0));setCustomer(body.customerName||"");setPhone(body.customerPhone||"");setExternal(body.externalOrderId||"");setLines(body.items.map((l:{menuId:string;quantity:number;expectedPrice?:number})=>{const m=data.menu.find(m=>m.id===l.menuId);return {menuId:l.menuId,code:m?.code||"",name:m?.name||l.menuId,category:m?.category||"",quantity:l.quantity,price:l.expectedPrice??m?.price??0};}));}catch{setInvalidPending(true);notify("The saved request could not be read. Do not create a replacement until it is reviewed.","error");}},[key]);
+ const locked=busy||uncertain||invalidPending||saved;
+ function clear(){setLines([]);setTable("");setWaiterId("");setCharge("0");setCustomer("");setPhone("");setExternal("");setSaved(false);}
+ async function submit(stay=false):Promise<{id?:string;stay:boolean}|null>{
+  if(busy||saved||invalidPending)return null;
+  if(!pending.current){if(loading||loadError){notify("Counter staff is not ready. Reload the page.","error");return null;}if(!waiterId){notify("Select a waiter or Counter sale.","error");return null;}if(!lines.length){notify("Add at least one item.","error");return null;}if(channel==="dine_in"&&!table){notify("Select a table.","error");return null;}if(channel==="foodpanda"&&!external.trim()){notify("Enter the Foodpanda order number.","error");return null;}if(!lines.every(l=>Number.isInteger(l.quantity)&&l.quantity>=1&&l.quantity<=99)){notify("Check item quantities.","error");return null;}if(!/^\d+(?:\.\d{1,2})?$/.test(charge)||Number(charge)>1000000){notify("Enter a valid packing charge.","error");return null;}
+   pending.current={path:"/api/waiter/orders",body:{requestId:crypto.randomUUID(),counterId,...(waiterId!=="self"?{waiterId}:{}),table:channel==="dine_in"?table:"PARCEL",salesChannel:channel,orderType:channel==="dine_in"?"dine_in":"takeaway",packingCharge:Number(charge),customerName:customer,customerPhone:phone,...(channel==="foodpanda"?{externalOrderId:external.trim()}:{}),items:lines.map(l=>({menuId:l.menuId,quantity:l.quantity,expectedPrice:l.price,fulfillment:channel==="dine_in"?"dine_in":"parcel"}))}};
+  }
+  setBusy(true);try{sessionStorage.setItem(key,JSON.stringify(pending.current));setUncertain(true);const response=await adminFetch(pending.current.path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(pending.current.body)});const result=await response.json();if(!response.ok){if(response.status<500){sessionStorage.removeItem(key);pending.current=null;setUncertain(false);}throw Error(result.error||"Order was not confirmed");}sessionStorage.removeItem(key);pending.current=null;setUncertain(false);setSaved(true);await refreshWorkspace().catch(()=>{});if(stay)clear();return {id:result.order?.id,stay};}catch(e){notify(e instanceof Error?e.message:"No confirmation received. Retry the saved request.","error");return null;}finally{setBusy(false);}
+ }
+ return {counterId,setCounterId,waiterId,setWaiterId,table,setTable,channel,setChannel,lines,setLines,charge,setCharge,customer,setCustomer,phone,setPhone,external,setExternal,counters,waiters,busy,uncertain,invalidPending,saved,loading,loadError,locked,clear,submit,total:counterTotal(lines)+Number(charge||0)};
+}

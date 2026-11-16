@@ -28,6 +28,7 @@ export type Order = {
   table: string;
   waiter: string;
  createdBy?:string;
+ enteredBy?:string;enteredByName?:string;
   createdAt: string;
   status: "New" | "Preparing" | "Ready" | "Paid" | "Cancelled";
   items: {
@@ -63,3 +64,4 @@ export type AppData = {
   printers: Printer[];
   expenses: { id: string; name: string; amount: number; date: string }[];
 };
+

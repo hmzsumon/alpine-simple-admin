@@ -1,0 +1,7 @@
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),ts=require('typescript'),vm=require('node:vm'),path=require('node:path');
+function load(file){const box={exports:{},require:p=>p==='./menuSearch'?load(path.join(path.dirname(file),'menuSearch.ts')):require(p)};vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText,box);return box.exports;}
+const {addCounterLine,counterItemByCode,counterTotal}=load(path.join(__dirname,'../utils/counterEntry.ts'));
+const dal={id:'dal',code:'35',name:'Mug Dal',nameBn:'মুগ ডাল',category:'Breakfast',price:30.25,active:true};
+test('exact English/Bangla codes do not select a prefix or unavailable item',()=>{assert.equal(counterItemByCode([dal],'৩৫').id,'dal');assert.equal(counterItemByCode([dal],'3'),undefined);assert.equal(counterItemByCode([{...dal,active:false}],'35'),undefined);assert.equal(counterItemByCode([{...dal,price:null}],'35'),undefined);});
+test('repeated entries merge quantities and preserve immutable billed prices',()=>{const first=addCounterLine([],dal,2),second=addCounterLine(first,{...dal,price:40},1);assert.equal(first[0].quantity,2);assert.equal(second[0].quantity,3);assert.equal(second[0].price,30.25);assert.equal(counterTotal(second),90.75);});
+test('invalid quantities and totals exceeding the item limit are rejected',()=>{for(const qty of [0,-1,1.5,100,NaN])assert.throws(()=>addCounterLine([],dal,qty));assert.throws(()=>addCounterLine(addCounterLine([],dal,99),dal,1));});
