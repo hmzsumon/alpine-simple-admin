@@ -37,11 +37,11 @@ export default function PrintableBill({ order, printedBy, previewAt,paper="therm
         <tbody>{order.items.map((item,index)=><tr key={index}><td>{index+1}. {item.name}{item.fulfillment==="parcel"?<small>Parcel</small>:null}</td><td>{amount(item.price)}</td><td>{item.quantity}</td><td>{amount(item.quantity*item.price)}</td></tr>)}</tbody>
       </table>
       <div className="bill-totals"><p><span>Sale total</span><span>{amount(subtotal)}</span></p>
+        {!!order.discountCents&&<p><span>Discount</span><span>-{amount(order.discountCents/100)}</span></p>}
         {!!order.packingCharge && <p><span>Packing charge</span><span>{amount(order.packingCharge)}</span></p>}
         <p className="bill-grand-total"><strong>Net payable (BDT)</strong><strong>{amount(total(order))}</strong></p>
       </div>
-      {!!order.payments?.length&&<div className="bill-payment">{Array.from(order.payments.reduce((methods,p)=>{for(const a of p.allocations)methods.set(a.name,(methods.get(a.name)||0)+a.cents);return methods;},new Map<string,number>())).map(([name,cents])=><p className="cash-slip-row" key={name}><span>{name}</span><strong>{taka(cents)}</strong></p>)}<p className="cash-slip-row"><span>Due</span><strong>{taka(Math.max(0,Math.round(total(order)*100)-order.payments.reduce((sum,p)=>sum+p.totalCents,0)))}</strong></p>{order.payments.some(p=>p.tenderedCashCents!==undefined)?<><p className="cash-slip-row"><span>Customer paid (cash)</span><strong>{taka(order.payments.reduce((sum,p)=>sum+(p.tenderedCashCents??p.allocations.filter(a=>a.kind==="cash").reduce((n,a)=>n+a.cents,0)),0))}</strong></p><p className="cash-slip-row"><span>Change returned</span><strong>{taka(order.payments.reduce((sum,p)=>sum+(p.changeCents||0),0))}</strong></p></>:null}</div>}
-      <footer><p>Bill by: {printedBy}</p><strong>Thank you. Please visit again.</strong></footer>
+      {!!order.payments?.length&&<div className="bill-payment">{Array.from(order.payments.reduce((methods,p)=>{for(const a of p.allocations)methods.set(a.name,(methods.get(a.name)||0)+a.cents);return methods;},new Map<string,number>())).map(([name,cents])=><p className="cash-slip-row" key={name}><span>{name}</span><strong>{taka(cents)}</strong></p>)}{order.payments.some(p=>p.tenderedCashCents!==undefined)?<><p className="cash-slip-row"><span>Customer paid (cash)</span><strong>{taka(order.payments.reduce((sum,p)=>sum+(p.tenderedCashCents??p.allocations.filter(a=>a.kind==="cash").reduce((n,a)=>n+a.cents,0)),0))}</strong></p><p className="cash-slip-row"><span>Change returned</span><strong>{taka(order.payments.reduce((sum,p)=>sum+(p.changeCents||0),0))}</strong></p></>:null}</div>}
     </article>
   </main>;
 }

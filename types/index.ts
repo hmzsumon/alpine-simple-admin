@@ -21,7 +21,8 @@ export type MenuItem = {
 export type Order = {
   floorName?:string; hallId?:string; hallName?:string;
   simpleDayId?:string;simpleCounterId?:string;simpleCounterName?:string;salesChannel?:"dine_in"|"takeaway"|"foodpanda";externalOrderId?:string;simpleBillNo?:string;payments?:import("@/types/simpleCash").BillPayment[];
-  orderType?: "dine_in" | "takeaway"; parcelToken?: string; customerName?: string; customerPhone?: string; packingCharge?: number; paymentStatus?: "unpaid" | "paid"; paidAt?: string; paidBy?: string; deliveredAt?: string;
+  orderType?: "dine_in" | "takeaway"; parcelToken?: string; customerName?: string; customerPhone?: string; packingCharge?: number;
+  discountCents?:number;discountBy?:string;discountByName?:string;discountAt?:string; paymentStatus?: "unpaid" | "paid"; paidAt?: string; paidBy?: string; deliveredAt?: string;
   cancelReason?: string;
   cancelPrepared?: boolean;
   id: string;

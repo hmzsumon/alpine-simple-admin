@@ -34,7 +34,7 @@ export default function OrderManagement() {
           <Download size={16} /> Export CSV
         </button></div>
       </div>
-      <div className="parcel-report"><span>তালিকায় Paid: এখানে খাওয়া <strong>{money(dineSales)}</strong></span><span>Parcelের খাবার <strong>{money(parcelSales)}</strong></span><span>Packing charge <strong>{money(paid.reduce((s, o) => s + (o.packingCharge || 0), 0))}</strong></span></div>
+      <div className="parcel-report"><span>Discounts <strong>{money(paid.reduce((s,o)=>s+(o.discountCents||0)/100,0))}</strong></span><span>তালিকায় Paid: এখানে খাওয়া <strong>{money(dineSales)}</strong></span><span>Parcelের খাবার <strong>{money(parcelSales)}</strong></span><span>Packing charge <strong>{money(paid.reduce((s, o) => s + (o.packingCharge || 0), 0))}</strong></span></div>
       <div className="filters"><select aria-label="Order channel" value={kind} onChange={(e) => setKind(e.target.value)}><option value="all">All Order</option><option value="parcel">Parcel আছে</option><option value="dine">এখানে খাওয়া আছে</option></select>
         <SearchBox value={search} onChange={setSearch} />
       </div>
