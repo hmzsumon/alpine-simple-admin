@@ -1,5 +1,6 @@
 /* ────────── exact financial requests survive timeouts; retry never creates another voucher ────────── */
 "use client";
+import {printConfirmedPayment} from "@/lib/billPrinting";
 import {adminFetch} from "@/lib/adminFetch";
 
 import {useCallback,useEffect,useRef,useState} from "react";
@@ -17,7 +18,7 @@ export function useCashCounter(counterId?:string){
   sessionStorage.setItem(key,JSON.stringify(body));setPending(body);
   const r=await adminFetch("/api/simple/command",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});const result=await r.json();
   if(!r.ok){if(r.status<500){sessionStorage.removeItem(key);setPending(undefined);}throw Error(result.error||"Request was not confirmed");}
-  sessionStorage.removeItem(key);setPending(undefined);await refresh();window.dispatchEvent(new Event("simple-cash-updated"));notify("Transaction saved successfully.");return result;
+  sessionStorage.removeItem(key);setPending(undefined);printConfirmedPayment(body,result);await refresh();window.dispatchEvent(new Event("simple-cash-updated"));notify("Transaction saved successfully.");return result;
  }catch(e){setError(e instanceof Error?e.message:"No response received. Retry the saved request.");return null;}finally{sending.current=false;setBusy(false);}};
  return {data,error,setError,busy,pending,refresh,command:async(action:string,fields:Record<string,unknown>={})=>{const saved=sessionStorage.getItem(key);if(saved){setPending(JSON.parse(saved));setError("Confirm the saved request before starting another transaction.");return null;}return submit({action,orderEpoch:data?.orderEpoch,counterId:data?.counter.id||counterId||"main",...fields,requestId:crypto.randomUUID()});},retry:async()=>{const saved=sessionStorage.getItem(key);return saved?submit(JSON.parse(saved)):null;}};
 }
