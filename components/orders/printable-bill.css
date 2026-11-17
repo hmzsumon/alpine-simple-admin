@@ -95,3 +95,9 @@
  .paper-a4 .bill-receipt { @apply !px-0; }
 }
 .paper-a4 .compact-bill-items th:not(:first-child),.paper-a4 .compact-bill-items td:not(:first-child) { @apply text-[12px]; }
+
+/* ────────── compact detachable customer token, in the same print job as the parcel bill ────────── */
+.parcel-token-slip { @apply mt-[2mm] break-inside-avoid border-t border-dashed border-black pt-[1.5mm] text-center; }
+.bill-receipt .parcel-token-heading { @apply m-0 text-[9px] font-bold leading-tight; }
+.parcel-token-number { @apply block break-words text-[30px] font-extrabold leading-[1.1] tracking-wide tabular-nums; overflow-wrap:anywhere; }
+.bill-receipt .parcel-token-invoice,.bill-receipt .parcel-token-context { @apply m-0 text-[9px] leading-tight; overflow-wrap:anywhere; }

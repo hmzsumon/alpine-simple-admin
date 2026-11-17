@@ -28,7 +28,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(landingPath(user), request.url));
   const response = NextResponse.next();
   response.headers.set("Cache-Control", "private, no-store");
-  response.headers.set("X-Frame-Options", "DENY");
+  // Only authenticated bill documents may load inside our own print iframe.
+  const billDocument=path.startsWith("/bill/");
+  response.headers.set("X-Frame-Options", billDocument?"SAMEORIGIN":"DENY");
+  if(billDocument)response.headers.set("Content-Security-Policy", "frame-ancestors 'self'");
   response.headers.set("X-Content-Type-Options", "nosniff");
   return response;
 }

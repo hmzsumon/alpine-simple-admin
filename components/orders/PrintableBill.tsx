@@ -14,6 +14,7 @@ const date = (value: string) => new Date(value).toLocaleString("en-GB", { timeZo
 export default function PrintableBill({ order, printedBy, previewAt,paper="thermal" }: {paper?:"a4"|"thermal"; order: Order; printedBy: string; previewAt: string }) {
   const router = useRouter();
   const paid = paidOrder(order), cancelled = order.status === "Cancelled";
+  const parcel = order.orderType==="takeaway" || order.salesChannel==="takeaway" || order.salesChannel==="foodpanda";
   const subtotal = order.items.reduce((sum, item) => sum + item.quantity * item.price, 0);
   return <main className={"bill-preview-page "+(paper==="a4"?"paper-a4":"")}><LiveDocument/><PaperSize paper={paper}/>
     <nav className="bill-preview-toolbar" aria-label="Bill preview">
@@ -42,6 +43,12 @@ export default function PrintableBill({ order, printedBy, previewAt,paper="therm
         <p className="bill-grand-total"><strong>Net payable (BDT)</strong><strong>{amount(total(order))}</strong></p>
       </div>
       {!!order.payments?.length&&<div className="bill-payment">{Array.from(order.payments.reduce((methods,p)=>{for(const a of p.allocations)methods.set(a.name,(methods.get(a.name)||0)+a.cents);return methods;},new Map<string,number>())).map(([name,cents])=><p className="cash-slip-row" key={name}><span>{name}</span><strong>{taka(cents)}</strong></p>)}{order.payments.some(p=>p.tenderedCashCents!==undefined)?<><p className="cash-slip-row"><span>Customer paid (cash)</span><strong>{taka(order.payments.reduce((sum,p)=>sum+(p.tenderedCashCents??p.allocations.filter(a=>a.kind==="cash").reduce((n,a)=>n+a.cents,0)),0))}</strong></p><p className="cash-slip-row"><span>Change returned</span><strong>{taka(order.payments.reduce((sum,p)=>sum+(p.changeCents||0),0))}</strong></p></>:null}</div>}
+      {parcel&&!cancelled&&<section className="parcel-token-slip" aria-label="Customer parcel token">
+        <p className="parcel-token-heading">ALPINE · CUSTOMER PARCEL TOKEN</p>
+        <strong className="parcel-token-number">{order.parcelToken||order.simpleBillNo||order.id}</strong>
+        <p className="parcel-token-invoice">{order.simpleBillNo||order.id}</p>
+        <p className="parcel-token-context">{order.simpleCounterName||"Main counter"} · {paid?"Paid":"Payment pending"}</p>
+      </section>}
     </article>
   </main>;
 }
