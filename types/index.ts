@@ -34,7 +34,7 @@ export type Order = { bookingState?:"booking"|"final";bookingRevision?:number;
   status: "New" | "Preparing" | "Ready" | "Paid" | "Cancelled";
   items: {
     fulfillment?: "dine_in" | "parcel";
-    menuId: string;
+    unitPrice?:number;priceSetBy?:string;priceSetByName?:string;menuId: string;
     name: string;
     nameBn?: string;
     quantity: number;

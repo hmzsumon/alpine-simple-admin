@@ -1,5 +1,6 @@
 /* ── Component: MenuItemForm ────────────────────────────────────────────── */
 "use client";
+import {isFishCategory} from "@/utils/fishPricing";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 
 
@@ -53,7 +54,7 @@ export default function MenuItemForm() {
         }
         if ((item.aliases?.length || 0) > 20 || item.aliases?.some(alias => alias.length > 80)) { setNotice("Use up to 20 aliases, each within 80 characters."); return; }
         if (item.code && data.menu.some((other) => other.id !== item.id && other.code === item.code)) { setNotice("This code is already used. Enter another code or leave it blank for automatic assignment."); return; }
-        if (item.active && price === null) {
+        if (item.active && price === null && !isFishCategory(item.category)) {
           setNotice("Confirm the price before enabling an item");
           return;
         }
