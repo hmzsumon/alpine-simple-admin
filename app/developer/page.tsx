@@ -1,4 +1,4 @@
-/* ────────── hidden owner-only console; deliberately absent from navigation ────────── */
+/* ────────── Owner-only console with a separate code gate ────────── */
 import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/server/api";
 import DeveloperConsole from "@/components/developer/DeveloperConsole";

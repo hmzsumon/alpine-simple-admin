@@ -1,6 +1,6 @@
 /* ────────── imports ────────── */
 import {
-  BookOpen, Banknote, Settings2,
+  BookOpen, Banknote, Settings2, Code2,
 
   LayoutDashboard,
 
@@ -21,6 +21,7 @@ export const navigation = [
  {name:"Cash register",href:"/cash",icon:Banknote},{name:"Sales & closing reports",href:"/reports",icon:BookOpen},{name:"Payment methods",href:"/payment-methods",icon:Wallet},
  {name:"Counter setup",href:"/cash-counters",icon:Settings2},
  {name:"Menu & categories",href:"/menu",icon:BookOpen},{name:"Tables & floors",href:"/tables",icon:Table2},{name:"Staff & permissions",href:"/users",icon:Users},
+ {name:"Developer",href:"/developer",icon:Code2},
  {name:"My account",href:"/profile",icon:ShieldCheck},{name:"Guides",href:"/guide",icon:CircleHelp},{name:"User guide",href:"/guide/quick-start",icon:CircleHelp}
 ];
 
