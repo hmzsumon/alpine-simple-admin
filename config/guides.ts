@@ -254,7 +254,7 @@ export const guides:Guide[]=[
     "audience": "Owner / Admin / Cashier",
     "steps": [
       "On each cashier PC, install the correct receipt-printer driver and select its 80mm / 72.1mm printable media. Keep portrait orientation, 100% scale, no margins and browser headers/footers off.",
-      "Enable Full cut / Cut after document in Windows Printing preferences. For the supported Rongta 80Normal driver, download the Windows auto-cut setup below and run it in Windows PowerShell as Administrator.",
+      "Enable Full cut / Cut after document in Windows Printing preferences. For the supported Rongta 80Normal driver, download the Windows auto-cut setup below and run it in Windows PowerShell as Administrator. If Chrome is installed, it also creates an Alpine Cashier - Auto Print desktop shortcut with a separate printing profile.",
       "If Windows blocks the downloaded script, run it from an elevated PowerShell window with: powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$env:USERPROFILE\\Downloads\\ENABLE-ALPINE-AUTOCUT.ps1\". Select the exact receipt printer if asked. This changes only that printer and saves the original preferences.",
       "Confirm a fully paid bill or use Bill preview > Print. A parcel bill is submitted first, followed by its small customer token as a separate print document. The same invoice and parcel number appear on both.",
       "Use Token only if only the small customer token needs another copy. A reprint never collects another payment. Ordinary browser windows may show two print dialogs; use the cashier Chrome kiosk-printing shortcut for unattended printing.",

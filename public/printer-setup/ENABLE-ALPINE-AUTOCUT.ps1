@@ -30,4 +30,22 @@ try{
  if($feed){Set-PrinterProperty -PrinterName $PrinterName -PropertyName 'Config:FeedPaper' -Value $feed.Value -ErrorAction SilentlyContinue}
  throw
 }
+# Optional dedicated Chrome profile: ordinary browser profiles and saved logins are untouched.
+$chrome=@("$env:ProgramFiles\Google\Chrome\Application\chrome.exe","${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe","$env:LOCALAPPDATA\Google\Chrome\Application\chrome.exe")|Where-Object {Test-Path -LiteralPath $_}|Select-Object -First 1
+if($chrome){
+ $profile=Join-Path $env:LOCALAPPDATA 'Alpine\CashierChrome'
+ $default=Join-Path $profile 'Default';New-Item -ItemType Directory -Path $default -Force|Out-Null
+ $preferences=Join-Path $default 'Preferences'
+ if(-not(Test-Path -LiteralPath $preferences)){
+  $state=@{version=2;recentDestinations=@(@{id=$PrinterName;origin='local';account=''});selectedDestinationId=$PrinterName;scaling='100';marginsType=1;isHeaderFooterEnabled=$false;isCssBackgroundEnabled=$false;isLandscapeEnabled=$false}|ConvertTo-Json -Depth 5 -Compress
+  @{printing=@{print_preview_sticky_settings=@{appState=$state}}}|ConvertTo-Json -Depth 6|Set-Content -LiteralPath $preferences -Encoding UTF8
+ }
+ $shell=New-Object -ComObject WScript.Shell
+ $link=$shell.CreateShortcut((Join-Path ([Environment]::GetFolderPath('DesktopDirectory')) 'Alpine Cashier - Auto Print.lnk'))
+ $link.TargetPath=$chrome
+ $link.Arguments='--app=https://alpine-simple-admin.vercel.app --kiosk-printing --no-first-run --user-data-dir="'+$profile+'"'
+ $link.Description='Alpine cashier: receipt and parcel token printing'
+ $link.Save()
+ Write-Host 'Open Alpine Cashier - Auto Print on the desktop and sign in. This avoids extra browser print-confirmation clicks.' -ForegroundColor Green
+}else{Write-Host 'Chrome was not found. The cutter setting is enabled; ordinary browsers may still display print dialogs.'}
 Read-Host 'Press Enter to close'
