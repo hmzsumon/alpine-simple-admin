@@ -272,7 +272,7 @@ export const guides:Guide[]=[
       "Printer preferences apply to each Windows PC separately. Logging into Alpine on another PC does not change that PC's printer driver settings.",
       "If beeping, flashing or Cutter Error returns, stop printing and check the cutter/paper path. A driver setting cannot repair a jammed or faulty cutter. The previous preferences are backed up under LOCALAPPDATA\\Alpine\\PrinterSetup.",
       "The receipt uses a conservative 68mm outer width so the amount column stays clear of the print edge. If a different printer still clips, verify its paper width and 100% scale.",
-      "Some leading paper is physically required between the print head and cutter. Extra page feed is disabled by the supported setup; required cutter feed is retained."
+      "For excess blank paper above a token, use Rongta PrinterTool: USB > Set Printer > PaperSave > Delete Empty Space At The Top > Enable > Set. Keep line and barcode compression at None. Use a zero-margin cashier printing profile. This trims blank print content; a physical gap can still remain between the print head and cutter. If zero-margin output still leaves that gap, do not reduce the required cutter feed."
     ],
     "related": [
       "closing",

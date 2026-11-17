@@ -96,7 +96,7 @@
 }
 .paper-a4 .compact-bill-items th:not(:first-child),.paper-a4 .compact-bill-items td:not(:first-child) { @apply text-[12px]; }
 
-/* ────────── compact detachable customer token, in the same print job as the parcel bill ────────── */
+/* ────────── compact token preview; physical bill/token use separate print documents ────────── */
 .parcel-token-slip { @apply mt-[2mm] break-inside-avoid border-t border-dashed border-black pt-[1.5mm] text-center; }
 .bill-receipt .parcel-token-heading { @apply m-0 text-[9px] font-bold leading-tight; }
 .parcel-token-number { @apply block break-words text-[30px] font-extrabold leading-[1.1] tracking-wide tabular-nums; overflow-wrap:anywhere; }
@@ -112,6 +112,8 @@
 @media print {
  .bill-receipt { width:min(68mm,100%) !important; max-width:100% !important; box-sizing:border-box !important; padding:0.5mm 1mm 0 !important; }
  .paper-a4 .bill-receipt { width:100% !important; padding:0 !important; }
+ /* Token-only output starts at the first printable row; keep the horizontal edge guards. */
+ .bill-receipt[data-print-part="token"] { padding-top:0 !important; }
  .bill-receipt .bill-items,.bill-totals,.bill-payment { @apply w-full min-w-0 max-w-full; }
  .compact-bill-items .item-name-col { width:42%; }
  .compact-bill-items .item-rate-col { width:20%; }
