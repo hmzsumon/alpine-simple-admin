@@ -248,29 +248,31 @@ export const guides:Guide[]=[
   },
   {
     "slug": "printing",
-    "title": "Print reports and save PDF copies",
+    "title": "Print compact bills and enable auto-cut",
     "category": "Reporting",
-    "summary": "Cashiers use 80mm receipts; Owner/Admin use A4 previews.",
+    "summary": "Print a narrow receipt and a separate customer parcel token with minimal paper feed.",
     "audience": "Owner / Admin / Cashier",
     "steps": [
-      "For a bill, open Orders and select Bill preview / print.",
-      "For cash-in, payouts or handovers, open the receipt link in Cash counter.",
-      "For a counter closing slip, open the counter report and select Closing preview / print.",
-      "For all counters, open Sales & closing reports, choose the date and select Daily total / PDF.",
-      "Select Print / Save as PDF. Choose the physical printer or Save as PDF in the browser dialog. Turn browser headers and footers off."
+      "On each cashier PC, install the correct receipt-printer driver and select its 80mm / 72.1mm printable media. Keep portrait orientation, 100% scale, no margins and browser headers/footers off.",
+      "Enable Full cut / Cut after document in Windows Printing preferences. For the supported Rongta 80Normal driver, download the Windows auto-cut setup below and run it in Windows PowerShell as Administrator.",
+      "If Windows blocks the downloaded script, run it from an elevated PowerShell window with: powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$env:USERPROFILE\\Downloads\\ENABLE-ALPINE-AUTOCUT.ps1\". Select the exact receipt printer if asked. This changes only that printer and saves the original preferences.",
+      "Confirm a fully paid bill or use Bill preview > Print. A parcel bill is submitted first, followed by its small customer token as a separate print document. The same invoice and parcel number appear on both.",
+      "Use Token only if only the small customer token needs another copy. A reprint never collects another payment. Ordinary browser windows may show two print dialogs; use the cashier Chrome kiosk-printing shortcut for unattended printing.",
+      "Use Compact PDF only when saving a PDF. Physical receipt printing uses the driver paper size and starts at the top."
     ],
     "example": {
-      "title": "Daily accounts on one report",
+      "title": "Parcel bill and token",
       "steps": [
-        "Total sales: BDT 4,500; cash bills: BDT 3,000; digital: BDT 1,000; Foodpanda receivable: BDT 500.",
-        "Opening float: BDT 2,000; other deposits: BDT 200; payouts: BDT 700."
+        "A parcel order has invoice B-20261117-C01-0005 and parcel token P-0005.",
+        "After confirmed full payment, the printer receives the bill and then the token as separate documents."
       ],
-      "result": "The report shows expected drawer cash BDT 4,500, plus the separate digital and Foodpanda amounts. Payout details show who received each amount and why."
+      "result": "With a working auto-cutter and Full cut enabled in the driver, each document is cut at its end. The customer receives the small matching token."
     },
     "tips": [
-      "Final records are saved in the database; PDF files are saved to your computer when you choose Save as PDF.",
-      "The closing receipt has Cashier and Owner signature lines.",
-      "A report is provisional while any counter for that day remains open."
+      "Printer preferences apply to each Windows PC separately. Logging into Alpine on another PC does not change that PC's printer driver settings.",
+      "If beeping, flashing or Cutter Error returns, stop printing and check the cutter/paper path. A driver setting cannot repair a jammed or faulty cutter. The previous preferences are backed up under LOCALAPPDATA\\Alpine\\PrinterSetup.",
+      "The receipt uses a conservative 68mm outer width so the amount column stays clear of the print edge. If a different printer still clips, verify its paper width and 100% scale.",
+      "Some leading paper is physically required between the print head and cutter. Extra page feed is disabled by the supported setup; required cutter feed is retained."
     ],
     "related": [
       "closing",

@@ -101,3 +101,27 @@
 .bill-receipt .parcel-token-heading { @apply m-0 text-[9px] font-bold leading-tight; }
 .parcel-token-number { @apply block break-words text-[30px] font-extrabold leading-[1.1] tracking-wide tabular-nums; overflow-wrap:anywhere; }
 .bill-receipt .parcel-token-invoice,.bill-receipt .parcel-token-context { @apply m-0 text-[9px] leading-tight; overflow-wrap:anywhere; }
+
+/* ────────── fit inside 72.1mm driver media, with a right-edge guard ────────── */
+.bill-receipt header h1 { @apply text-[15px] leading-[1.1]; }
+.bill-receipt header p { @apply my-0 text-[9px] leading-[1.15]; }
+.bill-receipt header { @apply mb-0.5; }
+.bill-status { @apply py-0.5; }
+.bill-meta { @apply my-0.5 gap-y-0 text-[9.5px] leading-[1.2]; }
+.bill-receipt[data-print-part="token"] .parcel-token-slip { @apply m-0 border-0 p-0; }
+@media print {
+ .bill-receipt { width:min(68mm,100%) !important; max-width:100% !important; box-sizing:border-box !important; padding:0.5mm 1mm 0 !important; }
+ .paper-a4 .bill-receipt { width:100% !important; padding:0 !important; }
+ .bill-receipt .bill-items,.bill-totals,.bill-payment { @apply w-full min-w-0 max-w-full; }
+ .compact-bill-items .item-name-col { width:42%; }
+ .compact-bill-items .item-rate-col { width:20%; }
+ .compact-bill-items .item-qty-col { width:8%; }
+ .compact-bill-items .item-amount-col { width:30%; }
+ .bill-receipt .compact-bill-items th:last-child,.bill-receipt .compact-bill-items td:last-child { width:30%; }
+ .bill-receipt .compact-bill-items th,.bill-receipt .compact-bill-items td { @apply py-0.5; }
+}
+
+@media print {
+ .bill-receipt .compact-bill-items th:not(:first-child),.bill-receipt .compact-bill-items td:not(:first-child) { font-size:9.5px; padding-left:2px; }
+ .bill-receipt .compact-bill-items th:nth-child(2),.bill-receipt .compact-bill-items td:nth-child(2) { padding-right:2px; }
+}
