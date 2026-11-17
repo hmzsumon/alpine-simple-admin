@@ -23,8 +23,8 @@ function run(job:Job,part:Part){
  frame.src=`/bill/${encodeURIComponent(job.orderId)}?printJob=${encodeURIComponent(job.jobId)}&part=${part}${job.confirmationId?"&payment="+encodeURIComponent(job.confirmationId):""}`;
  document.body.appendChild(frame);
 }
-export function printBill(orderId:string,confirmationId?:string,first:Part="bill"){
- if(typeof window==="undefined")return;const jobId=confirmationId||crypto.randomUUID(),key=orderId+":"+jobId;
+export function printBill(orderId:string,confirmationId?:string,first:Part="bill",printKey?:string){
+ if(typeof window==="undefined")return;const jobId=printKey||confirmationId||crypto.randomUUID(),key=orderId+":"+jobId;
  if(jobs.has(key))return;const job={orderId,jobId,confirmationId,first,key};jobs.set(key,job);queue.push(job);pump();
 }
 export function printConfirmedPayment(body:{action?:unknown;orderId?:unknown},result:{ok?:boolean;kind?:string;ref?:string}){if(body.action==="pay"&&result.ok&&result.kind==="pay"&&typeof body.orderId==="string"&&result.ref)printBill(body.orderId,result.ref);}

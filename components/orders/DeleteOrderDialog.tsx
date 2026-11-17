@@ -34,7 +34,7 @@ export default function DeleteOrderDialog({ id, close }: { id: string; close: ()
       {error && <p role="alert" className="info-note danger-text">{error}</p>}
       {preview && <>
         <p className="info-note"><strong>{preview.table} · {money(preview.total)}</strong><br />{preview.id}<br />{preview.status} · {preview.paid ? "Paid" : "Due"}</p>
-        <p className="muted">Delete হলে তালিকা ও বিক্রয় রিপোর্ট থেকে এই Order Skip যাবে। মূল Order, Reason ও দায়িত্বপ্রাপ্ত ব্যক্তির রেকর্ড সংরক্ষিত থাকবে।{preview.paid ? " Received করা Amount স্বয়ংক্রিয়ভাবে ফেরত যাবে না।" : ""}</p>
+        <p className="muted">Delete হলে তালিকা ও বিক্রয় রিপোর্ট থেকে এই Order Skip যাবে। মূল Order, Reason ও দায়িত্বপ্রাপ্ত ব্যক্তির রেকর্ড সংরক্ষিত থাকবে।{preview.paid ? " First cancel and refund this collected bill. Deletion is blocked until its net collections are zero." : ""}</p>
         <label>Deleteের Reason *<textarea required minLength={3} maxLength={300} value={reason} disabled={deleting} onChange={e => setReason(e.target.value)} placeholder="যেমন: ভুল করে একই Order দুবার নেওয়া হয়েছে" /></label>
         <label className="check-label"><input type="checkbox" checked={prepared} disabled={deleting || preview.preparedRequired} onChange={e => setPrepared(e.target.checked)} />রান্না From হয়েছে / খাবার Internal groupে set হয়েছে</label>
         <p className="muted">রান্না না হলে সংরক্ষিত স্টক ছাড়বে। রান্না From হওয়া খাবার স্টকে ফেরত যাবে না; প্রযোজ্য হলে অপচয় হিসেবে থাকবে।</p>

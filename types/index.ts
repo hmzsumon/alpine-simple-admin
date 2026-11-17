@@ -18,7 +18,7 @@ export type MenuItem = {
   active: boolean;
   note?: string;
 };
-export type Order = { bookingState?:"booking"|"final";bookingRevision?:number;
+export type Order = { handoffPrintId?:string;finalizedAt?:string;handoffPrintClaim?:{by:string;at:string;deviceId:string};adjustments?:{id:string;at:string;by:string;byName:string;reason:string;cancel:boolean;refundedCents:number;before:{items:Order["items"];discountCents:number;status:string};after:{items:Order["items"];discountCents:number;totalCents:number}}[]; bookingState?:"booking"|"final";bookingRevision?:number;
   floorName?:string; hallId?:string; hallName?:string;tableName?:string;
   simpleDayId?:string;simpleCounterId?:string;simpleCounterName?:string;salesChannel?:"dine_in"|"takeaway"|"foodpanda";externalOrderId?:string;simpleBillNo?:string;payments?:import("@/types/simpleCash").BillPayment[];
   orderType?: "dine_in" | "takeaway"; parcelToken?: string; customerName?: string; customerPhone?: string; packingCharge?: number;
@@ -37,7 +37,7 @@ export type Order = { bookingState?:"booking"|"final";bookingRevision?:number;
     unitPrice?:number;priceSetBy?:string;priceSetByName?:string;menuId: string;
     name: string;
     nameBn?: string;
-    quantity: number;
+    category?:string;quantity: number;
     price: number;
  note?:string;
     station: Station;

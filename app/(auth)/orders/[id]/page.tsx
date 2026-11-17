@@ -1,0 +1,1 @@
+import OrderDetailsPage from '@/components/orders/OrderDetailsPage';export default function Page({params}:{params:{id:string}}){return <OrderDetailsPage id={params.id}/>;}
