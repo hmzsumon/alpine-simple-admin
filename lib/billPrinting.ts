@@ -13,7 +13,7 @@ function run(job:Job,part:Part){
  const message=(event:MessageEvent)=>{
   if(event.origin!==window.location.origin||event.source!==frame.contentWindow||event.data?.type!=="alpine:bill-print"||event.data.jobId!==job.jobId||(event.data.part||"bill")!==part)return;
   if(event.data.status==="started")return;
-  if(event.data.status==="error"){fail("The payment is saved. Printing could not start. Use Reprint bill or Token only; do not collect payment again.");return;}
+  if(event.data.status==="error"){fail(job.confirmationId?"The payment is saved. Printing could not start. Use Reprint bill or Token only; do not collect payment again.":"The order is saved. Printing could not start. Use Reprint bill or Token only and check the saved payment status.");return;}
   if(event.data.status==="finished"||event.data.status==="skipped")finish(part==="bill"&&event.data.hasToken===true);
  };
  const timeout=setTimeout(()=>fail("Printing could not be verified. Check the printer before requesting another copy."),120000);
