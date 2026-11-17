@@ -4,6 +4,7 @@
 import {
   createContext,
   useCallback,
+  useMemo,
   useContext,
   useEffect,
   useState,
@@ -43,18 +44,16 @@ export default function AuthProvider({
     window.addEventListener("alpine:data-changed",refresh);
     return () => {window.removeEventListener("focus", refresh);window.removeEventListener("alpine:data-changed",refresh);};
   }, [refresh]);
-  const logout = async () => {
+  const logout = useCallback(async () => {
     await fetch("/api/auth/logout", { method: "POST" }).catch(() => undefined);
     router.replace("/login");
     router.refresh();
-  };
+  },[router]);
+  const can=useCallback((permission:Permission)=>user.permissions.includes(permission),[user.permissions]);
+  const context=useMemo(()=>({user,can,logout}),[user,can,logout]);
   return (
     <AuthContext.Provider
-      value={{
-        user,
-        can: (permission) => user.permissions.includes(permission),
-        logout,
-      }}
+      value={context}
     >
       {children}
     </AuthContext.Provider>

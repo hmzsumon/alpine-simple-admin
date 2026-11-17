@@ -1,3 +1,4 @@
+import {createReadQueue,reconcileCollections} from "@/utils/readQueue";
 /* ────────── imports ────────── */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -9,6 +10,8 @@ import type { AppData, MenuItem, Order } from "@/types";
 import { defaultTables, defaultKitchens } from "@/config/restaurantSetup";
 import { matchesMenuSearch, normalizeItemCode } from "@/utils/menuSearch";
 
+const dayFormat = new Intl.DateTimeFormat("en-CA", {timeZone:"Asia/Dhaka"});
+const weekdayFormat = new Intl.DateTimeFormat("en", {weekday:"short",timeZone:"Asia/Dhaka"});
 /* ────────── workspace state and actions ────────── */
 export function useAdminWorkspace() {
   const router = useRouter();
@@ -23,6 +26,7 @@ export function useAdminWorkspace() {
   const [orderEpoch,setOrderEpoch]=useState(0);
   const [revision, setRevision] = useState(0);
   const readVersion = useRef(0);
+  const queuedRead=useRef(createReadQueue(loadWorkspace));
 
   const [mode, setMode] = useState("loading");
 
@@ -51,10 +55,10 @@ export function useAdminWorkspace() {
   useEffect(() => {
     let alive = true;
     const version = ++readVersion.current;
-    loadWorkspace()
+    queuedRead.current()
       .then((result) => {
         if (alive && version === readVersion.current) {
-          setData(result.data);
+          setData(previous=>reconcileCollections(previous,result.data));
           setRevision(result.revision); if(result.orderEpoch!==undefined)setOrderEpoch(result.orderEpoch);
           setMode(result.mode);
         }
@@ -79,15 +83,15 @@ export function useAdminWorkspace() {
   /* ────────── persist explicit changes ────────── */
   async function refreshWorkspace() {
     const version = ++readVersion.current;
-    const result = await loadWorkspace();
-    if (version === readVersion.current) { setData(result.data); setRevision(result.revision); if(result.orderEpoch!==undefined)setOrderEpoch(result.orderEpoch); setMode(result.mode); }
+    const result = await queuedRead.current();
+    if (version === readVersion.current) { setData(previous=>reconcileCollections(previous,result.data)); setRevision(result.revision); if(result.orderEpoch!==undefined)setOrderEpoch(result.orderEpoch); setMode(result.mode); }
   }
   // Refresh live availability without replacing a form's in-progress edits.
   useEffect(() => {
     if (modal || busy) return;
     let alive = true;
-    const timer = setInterval(() => { const version = ++readVersion.current; void loadWorkspace().then((result) => {
-      if (alive && version === readVersion.current) { setData(result.data); setRevision(result.revision); if(result.orderEpoch!==undefined)setOrderEpoch(result.orderEpoch); setMode(result.mode); }
+    const timer = setInterval(() => { if(document.visibilityState==="hidden")return;const version = ++readVersion.current; void queuedRead.current().then((result) => {
+      if (alive && version === readVersion.current) { setData(previous=>reconcileCollections(previous,result.data)); setRevision(result.revision); if(result.orderEpoch!==undefined)setOrderEpoch(result.orderEpoch); setMode(result.mode); }
     }).catch(() => {}); }, 15000);
     return () => { alive = false; clearInterval(timer); };
   }, [modal, busy]);
@@ -100,7 +104,7 @@ export function useAdminWorkspace() {
     setBusy(true);
     try {
       const result = await persistWorkspace(next, data, revision);
-      setData(result.data);
+      setData(previous=>reconcileCollections(previous,result.data));
       setRevision(result.revision); if(result.orderEpoch!==undefined)setOrderEpoch(result.orderEpoch);
       return true;
     } catch (error) {
@@ -112,75 +116,53 @@ export function useAdminWorkspace() {
   }
 
   // Include empty saved categories while retaining the original menu categories.
-  const categories = Array.from(new Map(
+  const categories = useMemo(()=> Array.from(new Map(
     [...(data.categories || []), ...data.menu.map((i) => i.category)]
       .map((name) => [name.toLowerCase(), name])
-  ).values());
+  ).values()),[data.categories,data.menu]);
 
-  const filteredMenu = data.menu.filter(
+  const filteredMenu = useMemo(()=> data.menu.filter(
     (i) =>
       (category === "All categories" || i.category === category || (i.code && i.code === normalizeItemCode(search.replace(/^(?:কোড|code)\s*/i, "")))) &&
       matchesMenuSearch(i, search)
-  ).sort((a, b) => (a.code || "999999").localeCompare(b.code || "999999", "en", { numeric: true }));
+  ).sort((a, b) => (a.code || "999999").localeCompare(b.code || "999999", "en", { numeric: true })),[data.menu,category,search]);
 
-  const orders = data.orders.filter((o) =>
+  const orders = useMemo(()=> data.orders.filter((o) =>
     `${o.id} ${o.table} ${o.parcelToken || ""} ${o.customerName || ""} ${o.customerPhone || ""} ${o.waiter}`
       .toLowerCase()
       .includes(search.toLowerCase())
-  );
+  ),[data.orders,search]);
 
-  const active = data.orders.filter(
+  const active = useMemo(()=> data.orders.filter(
     (o) => !["Paid", "Cancelled"].includes(o.status)
-  );
+  ),[data.orders]);
 
-  const periodOrders = data.orders.filter((o) => {
-    const age = Date.now() - new Date(o.createdAt).getTime();
-    return range === "Today"
-      ? new Date(o.createdAt).toLocaleDateString("en-CA", {
-          timeZone: "Asia/Dhaka",
-        }) ===
-          new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Dhaka" })
-      : age < 7 * 86400000;
-  });
-
-  const paid = periodOrders.filter((o) => paidOrder(o) && o.status !== "Cancelled");
-
-  const sales = paid.reduce((s, o) => s + total(o), 0);
-
-  const expense = data.expenses
-    .filter((e) =>
-      range === "Today"
-        ? e.date ===
-          new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Dhaka" })
-        : Date.now() - new Date(e.date).getTime() < 7 * 86400000
-    )
-    .reduce((s, e) => s + e.amount, 0);
-
-  const chart = useMemo(
-    () =>
-      Array.from({ length: 7 }, (_, i) => {
-        const date = new Date(Date.now() - (6 - i) * 86400000);
-        const day = date.toLocaleDateString("en-CA", {
-          timeZone: "Asia/Dhaka",
-        });
-        return {
-          day: date.toLocaleDateString("en", {
-            weekday: "short",
-            timeZone: "Asia/Dhaka",
-          }),
-          sales: data.orders
-            .filter(
-              (o) =>
-                paidOrder(o) && o.status !== "Cancelled" &&
-                new Date(o.createdAt).toLocaleDateString("en-CA", {
-                  timeZone: "Asia/Dhaka",
-                }) === day
-            )
-            .reduce((s, o) => s + total(o), 0),
-        };
-      }),
-    [data.orders]
-  );
+  const today = dayFormat.format(new Date());
+  const periodOrders = useMemo(() => {
+    const now = Date.now();
+    return data.orders.filter(o => range === "Today"
+      ? dayFormat.format(new Date(o.createdAt)) === today
+      : now - new Date(o.createdAt).getTime() < 7 * 86400000);
+  }, [data.orders, range, today]);
+  const paid = useMemo(() => periodOrders.filter(o => paidOrder(o) && o.status !== "Cancelled"), [periodOrders]);
+  const sales = useMemo(() => paid.reduce((sum, o) => sum + total(o), 0), [paid]);
+  const expense = useMemo(() => {
+    const now = Date.now();
+    return data.expenses.filter(e => range === "Today" ? e.date === today : now - new Date(e.date).getTime() < 7 * 86400000)
+      .reduce((sum, e) => sum + e.amount, 0);
+  }, [data.expenses, range, today]);
+  const chart = useMemo(() => {
+    const sums = new Map<string, number>();
+    for (const o of data.orders) {
+      if (!paidOrder(o) || o.status === "Cancelled") continue;
+      const day = dayFormat.format(new Date(o.createdAt));
+      sums.set(day, (sums.get(day) || 0) + total(o));
+    }
+    return Array.from({length:7}, (_, i) => {
+      const date = new Date(Date.now() - (6-i)*86400000);
+      return {day:weekdayFormat.format(date),sales:sums.get(dayFormat.format(date)) || 0};
+    });
+  }, [data.orders, today]);
 
   function navigate(name: string) {
     const destination = navigation.find((item) => item.name === name);

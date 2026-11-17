@@ -3,6 +3,7 @@
 
 /* ────────── imports ────────── */
 import Link from "next/link";
+import {useRouter} from "next/navigation";
 import type { MouseEvent } from "react";
 import { useAdminContext } from "@/context/AdminContext";
 import {
@@ -17,6 +18,7 @@ import { LogOut } from "lucide-react";
 import { navigation } from "@/config/admin";
 
 export default function AdminSidebar() {
+  const router=useRouter();
   const { user, logout } = useAuth();
   /* ────────── workspace state ────────── */
   const { page, drawer, active, navigate } = useAdminContext();
@@ -52,6 +54,9 @@ export default function AdminSidebar() {
           .map((n) => (
             <Link
               href={n.href}
+              prefetch={false}
+              onMouseEnter={()=>router.prefetch(n.href)}
+              onFocus={()=>router.prefetch(n.href)}
               key={n.name}
               className={page === n.name ? "selected" : ""}
               aria-current={page === n.name ? "page" : undefined}
