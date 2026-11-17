@@ -1,47 +1,45 @@
-/* ── Component: StaffDirectory ───────────────────────────────────────── */
-"use client";
-import Link from "next/link";
-import {adminFetch} from "@/lib/adminFetch";
-
-import {useLiveEffect} from "@/hooks/useLiveEffect";
-
-
-
-
-
-import { useCallback, useRef, useState } from "react";
-import { useAuth } from "@/providers/AuthProvider";
-import type { AuthUser, Permission, StaffRole } from "@/types/auth";
-
-import OwnerPasswordTools from "./OwnerPasswordTools";
-import ShiftManager from "./ShiftManager";
-import StaffAccountForm from "./StaffAccountForm";
-import StaffRoleManager from "./StaffRoleManager";
-export default function StaffDirectory() {
-  const { user } = useAuth();
-  const [users, setUsers] = useState<AuthUser[]>([]), [roles, setRoles] = useState<StaffRole[]>([]), [permissions, setPermissions] = useState<Permission[]>([]), [editing, setEditing] = useState<AuthUser>(), [notice, setNotice] = useState(""), [busy, setBusy] = useState(false);
-  const reads=useRef(0);
-  const load = useCallback(async () => { const read=++reads.current;try {
-    const [u, r] = await Promise.all([adminFetch("/api/users", { cache: "no-store" }), adminFetch("/api/roles", { cache: "no-store" })]);
-    const [accounts, roleData] = await Promise.all([u.json(), r.json()]); if (!u.ok || !r.ok) throw new Error(accounts.error || roleData.error);
-    if(read!==reads.current)return;setUsers(accounts.users); setRoles(roleData.roles); setPermissions(roleData.permissions);
-  } catch (e) { setNotice(e instanceof Error ? e.message : "Could not load employees"); } }, []);
-  useLiveEffect(() => { void load(); }, [load]);
-  async function save(path: string, body: unknown, method = "POST") {
-    setBusy(true); setNotice(""); try {
-      const response = await adminFetch(path, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); const data = await response.json(); if (!response.ok) throw new Error(data.error);
-      setNotice("Saved. Staff must sign in again after their role, assignments or password changes."); await load(); return true;
-    } catch (e) { setNotice(e instanceof Error ? e.message : "Could not save"); return false; } finally { setBusy(false); }
-  }
-  return <>
-    <p className="info-note">Staff sign in with their mobile numbers. Assign tables to waiters and use the Parcel & Foodpanda role for counter orders. Change cashier custody from Cash counter. Deactivate staff to retain their history.</p>{notice && <p role="status" className="info-note">{notice}</p>}
-    <section className="panel"><div className="panel-title"><h3>Staff accounts</h3><span className="count-pill">{users.length}</span></div><div className="table-scroll"><table><thead><tr><th>Employee</th><th>Mobile / email</th><th>Role</th><th>Tables</th><th>Status</th>{user.role==="owner"&&!user.roleId&&<th>Password · Owner only</th>}<th>Actions</th></tr></thead><tbody>{users.map((staff) => <tr key={staff.id}><td><Link className="text-emerald-300 hover:underline" href={`/users/${staff.id}`}>{staff.name}{staff.id === user.id ? " (you)" : ""}</Link></td><td>{staff.phone || "Add mobile number"}<small className="staff-email">{staff.email}</small></td><td>{staff.roleName || staff.role}</td><td>{staff.stations?.join(", ") || "—"}<small className="staff-email">{staff.tables === undefined ? "Legacy account: all tables" : staff.tables.join(", ") || "No tables assigned"}</small></td><td><span className={"badge " + (staff.active ? "Ready" : "Cancelled")}>{staff.active ? "Active" : "Inactive"}</span></td>{user.role==="owner"&&!user.roleId&&<td><OwnerPasswordTools id={staff.id} name={staff.name} isOwner={staff.role==="owner"} reload={load}/></td>}<td><div className="assignment-tools"><Link className="secondary" href={`/users/${staff.id}`}>Details</Link><button className="secondary" disabled={busy} onClick={() => setEditing(staff)}>Edit</button>{staff.role !== "owner" && <button className="secondary" disabled={busy} onClick={() => void save("/api/users/" + staff.id, { active: !staff.active }, "PATCH")}>{staff.active ? "Inactive" : "Active"}</button>}</div></td></tr>)}</tbody></table></div></section>
-    <div className="mt-6"><section className="panel account-card"><h3>{editing ? `${editing.name} — Edit` : "New employee"}</h3><StaffAccountForm key={editing?.id || "new"} staff={editing} roles={roles} busy={busy} cancel={editing ? () => setEditing(undefined) : undefined} save={async (body) => { const ok = await save(editing ? "/api/users/" + editing.id : "/api/users", body, editing ? "PATCH" : "POST"); if (ok) setEditing(undefined); return ok; }} /></section>
-    </div>
-    
-    <div className="mt-6"><ShiftManager/></div>
-    <div style={{ marginTop: 22 }}><StaffRoleManager roles={roles} permissions={permissions} busy={busy} save={(body, id) => save(id ? "/api/roles/" + id : "/api/roles", body, id ? "PATCH" : "POST")} /></div>
-  </>;
+/* ── Searchable employee workspace; account list, access roles and shifts have separate views ── */
+'use client';
+import {useCallback,useMemo,useRef,useState,type KeyboardEvent} from 'react';
+import {Users,UserCheck,UserX,UserPlus,Search,RefreshCw,ShieldCheck,Clock3,X,ChevronLeft,ChevronRight,SlidersHorizontal} from 'lucide-react';
+import {adminFetch} from '@/lib/adminFetch';import {confirmAction} from '@/lib/feedback';
+import {useLiveEffect} from '@/hooks/useLiveEffect';import {useAuth} from '@/providers/AuthProvider';
+import type {AuthUser,Permission,StaffRole} from '@/types/auth';
+import {filterStaff,staffRoleTabs,type StaffStatus} from '@/utils/staffDirectory';
+import ShiftManager from './ShiftManager';import StaffRoleManager from './StaffRoleManager';import StaffAccountList from './StaffAccountList';import StaffEditorPanel from './StaffEditorPanel';
+import './staff-directory.css';
+type Section='accounts'|'roles'|'shifts';
+export default function StaffDirectory(){
+ const {user}=useAuth(),[users,setUsers]=useState<AuthUser[]>([]),[roles,setRoles]=useState<StaffRole[]>([]),[permissions,setPermissions]=useState<Permission[]>([]),[counterNames,setCounterNames]=useState<Record<string,string>>({}),[section,setSection]=useState<Section>('accounts'),[query,setQuery]=useState(''),[role,setRole]=useState('all'),[status,setStatus]=useState<StaffStatus>('all'),[page,setPage]=useState(0),[pageSize,setPageSize]=useState(10),[editor,setEditor]=useState<{staff?:AuthUser}>(),[notice,setNotice]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false),[loaded,setLoaded]=useState(false),[refreshing,setRefreshing]=useState(false);
+ const [visited,setVisited]=useState<Record<Section,boolean>>({accounts:true,roles:false,shifts:false});
+ const showSection=(id:Section)=>{setSection(id);setVisited(v=>({...v,[id]:true}));};
+ const reads=useRef(0),controller=useRef<AbortController>(),sending=useRef(false);
+ const load=useCallback(async()=>{const read=++reads.current;controller.current?.abort();const abort=new AbortController();controller.current=abort;setRefreshing(true);try{
+  const [u,r,c]=await Promise.all([adminFetch('/api/users',{cache:'no-store',signal:abort.signal}),adminFetch('/api/roles',{cache:'no-store',signal:abort.signal}),fetch('/api/simple/counters',{cache:'no-store',signal:abort.signal}).catch(()=>null)]);
+  const [accounts,roleData,counters]=await Promise.all([u.json(),r.json(),c?.ok?c.json():null]);if(!u.ok||!r.ok)throw Error(accounts.error||roleData.error||'Could not load staff');if(read!==reads.current)return;
+  setUsers(accounts.users);setRoles(roleData.roles);setPermissions(roleData.permissions);if(counters)setCounterNames(Object.fromEntries(counters.counters.map((v:{id:string;name:string})=>[v.id,v.name])));setLoaded(true);setError('');
+ }catch(e){if(read===reads.current&&!(e instanceof Error&&e.name==='AbortError'))setError(e instanceof Error?e.message:'Could not load staff');}finally{if(read===reads.current)setRefreshing(false);}},[]);
+ useLiveEffect(()=>{void load();return()=>{reads.current++;controller.current?.abort();};},[load]);
+ const tabs=useMemo(()=>staffRoleTabs(users,roles),[users,roles]),filtered=useMemo(()=>filterStaff(users,query,role,status),[users,query,role,status]);
+ const pages=Math.max(1,Math.ceil(filtered.length/pageSize)),currentPage=Math.min(page,pages-1),visible=filtered.slice(currentPage*pageSize,(currentPage+1)*pageSize),active=users.filter(u=>u.active).length;
+ const reset=()=>{setQuery('');setRole('all');setStatus('all');setPage(0);};
+ async function save(path:string,body:unknown,method='POST'){
+  if(sending.current)return false;sending.current=true;setBusy(true);setNotice('');setError('');try{const r=await adminFetch(path,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await r.json();if(!r.ok)throw Error(data.error);setNotice('Saved. Changes to a login or role apply when the employee signs in again.');await load();return true;}catch(e){setError(e instanceof Error?e.message:'Could not save');return false;}finally{sending.current=false;setBusy(false);}
+ }
+ async function toggle(staff:AuthUser){if(staff.active&&!await confirmAction('Deactivate '+staff.name+'? They will no longer be able to sign in. Their order and sales history will stay saved.',{title:'Deactivate employee',confirmLabel:'Deactivate',danger:true}))return;await save('/api/users/'+staff.id,{active:!staff.active},'PATCH');}
+ const moveTab=(e:KeyboardEvent<HTMLButtonElement>,ids:string[],current:string,prefix:string,select:(id:string)=>void)=>{let next:number|undefined;const i=ids.indexOf(current);if(e.key==='ArrowRight')next=(i+1)%ids.length;else if(e.key==='ArrowLeft')next=(i-1+ids.length)%ids.length;else if(e.key==='Home')next=0;else if(e.key==='End')next=ids.length-1;if(next===undefined)return;e.preventDefault();select(ids[next]);requestAnimationFrame(()=>document.getElementById(prefix+ids[next!])?.focus());};
+ const sections=[{id:'accounts' as const,label:'Staff accounts',icon:Users},{id:'roles' as const,label:'Roles & permissions',icon:ShieldCheck},{id:'shifts' as const,label:'Shift templates',icon:Clock3}];
+ return <div className="staff-workspace"><header className="staff-workspace-heading"><div><span className="staff-workspace-eyebrow">TEAM WORKSPACE</span><h1>Staff & permissions</h1><p>Find employees, manage access and keep your team organised.</p></div><div className="staff-workspace-actions"><button className="secondary" disabled={refreshing||busy} onClick={()=>void load()} aria-label="Refresh staff"><RefreshCw size={16} className={refreshing?'staff-spin':''}/>Refresh</button><button className="primary" disabled={!loaded||busy} onClick={()=>setEditor({})}><UserPlus size={17}/>New employee</button></div></header>
+ <div className="staff-workspace-tabs" role="tablist" aria-label="Staff workspace sections">{sections.map(s=><button id={'staff-section-'+s.id} key={s.id} type="button" role="tab" aria-selected={section===s.id} aria-controls={'staff-view-'+s.id} tabIndex={section===s.id?0:-1} onKeyDown={e=>moveTab(e,sections.map(v=>v.id),s.id,'staff-section-',id=>showSection(id as Section))} onClick={()=>showSection(s.id)}><s.icon size={16}/>{s.label}{s.id==='accounts'&&loaded&&<span>{users.length}</span>}</button>)}</div>
+ {error&&<div className="staff-alert is-error" role="alert"><span>{error}</span><button className="staff-row-button" disabled={refreshing} onClick={()=>void load()}>Retry</button></div>}{notice&&<div className="staff-alert" role="status"><span>{notice}</span><button className="staff-row-button" onClick={()=>setNotice('')} aria-label="Dismiss staff notice"><X size={16}/></button></div>}
+ {section==='accounts'&&<section id="staff-view-accounts" role="tabpanel" aria-labelledby="staff-section-accounts"><div className="staff-overview">{[{label:'Total employees',value:users.length,icon:Users},{label:'Active accounts',value:active,icon:UserCheck},{label:'Inactive accounts',value:users.length-active,icon:UserX}].map(m=><div key={m.label}><m.icon size={19}/><span>{m.label}<strong>{loaded?m.value:'—'}</strong></span></div>)}<p><ShieldCheck size={16}/><span>Waiters can serve every hall and table.<br/><strong>No table assignment needed.</strong></span></p></div>
+ <section className="panel staff-directory-panel"><div className="staff-directory-toolbar"><div className="staff-directory-search"><Search size={18}/><input aria-label="Search staff by name or mobile" type="search" placeholder="Search name, mobile number or email…" value={query} onChange={e=>{setQuery(e.target.value);setPage(0);}}/>{query&&<button className="staff-row-button" aria-label="Clear staff search" onClick={()=>{setQuery('');setPage(0);}}><X size={16}/></button>}</div><label className="staff-status-filter"><SlidersHorizontal size={15}/><span className="sr-only">Filter account status</span><select aria-label="Filter account status" value={status} onChange={e=>{setStatus(e.target.value as StaffStatus);setPage(0);}}><option value="all">All statuses</option><option value="active">Active accounts</option><option value="inactive">Inactive accounts</option></select></label></div>
+ <div className="staff-role-tabs" role="tablist" aria-label="Filter employees by role">{tabs.map(t=><button type="button" role="tab" key={t.id} id={'staff-role-'+t.id} aria-selected={role===t.id} aria-controls="staff-results" tabIndex={role===t.id?0:-1} onKeyDown={e=>moveTab(e,tabs.map(t=>t.id),t.id,'staff-role-',id=>{setRole(id);setPage(0);})} onClick={()=>{setRole(t.id);setPage(0);}}>{t.name}<span>{t.count}</span></button>)}</div>
+ <div className="staff-results-summary"><p id="staff-result-count" role="status">{!loaded?'Loading staff…':<><strong>{filtered.length}</strong> {filtered.length===1?'employee':'employees'}{role!=='all'?' · '+(tabs.find(t=>t.id===role)?.name||'Selected role'):''}{query?' matching “'+query+'”':''}</>}</p>{(query||role!=='all'||status!=='all')&&<button className="staff-clear-filters" onClick={reset}>Clear filters</button>}</div>
+ <div id="staff-results" role="tabpanel" aria-labelledby={'staff-role-'+role} aria-busy={!loaded||refreshing}>{!loaded?<div className="staff-loading"><Users size={28}/><p>{error?'Staff could not be loaded. Please retry.':'Loading your team…'}</p></div>:<StaffAccountList key={role+':'+currentPage+':'+query+':'+status} users={visible} currentUser={user} counterNames={counterNames} busy={busy} edit={staff=>setEditor({staff})} toggle={staff=>void toggle(staff)} reload={load}/>}</div>
+ <footer className="staff-directory-footer"><span>{filtered.length?currentPage*pageSize+1:0}–{Math.min((currentPage+1)*pageSize,filtered.length)} of {filtered.length} employees</span><div><label>Rows<select aria-label="Employees per page" value={pageSize} onChange={e=>{setPageSize(Number(e.target.value));setPage(0);}}><option value={5}>5</option><option value={10}>10</option><option value={20}>20</option><option value={50}>50</option></select></label><button className="staff-row-button" disabled={currentPage===0} aria-label="Previous staff page" onClick={()=>setPage(currentPage-1)}><ChevronLeft size={17}/></button><span>{currentPage+1} / {pages}</span><button className="staff-row-button" disabled={currentPage+1>=pages} aria-label="Next staff page" onClick={()=>setPage(currentPage+1)}><ChevronRight size={17}/></button></div></footer></section></section>}
+ {visited.roles&&<section hidden={section!=='roles'} id="staff-view-roles" role="tabpanel" aria-labelledby="staff-section-roles"><div className="staff-section-intro"><ShieldCheck size={20}/><div><h2>Access roles</h2><p>Keep permissions consistent by assigning a role to each employee. Role changes apply after sign-in.</p></div></div><StaffRoleManager roles={roles} permissions={permissions} busy={busy} save={(body,id)=>save(id?'/api/roles/'+id:'/api/roles',body,id?'PATCH':'POST')}/></section>}
+ {visited.shifts&&<section hidden={section!=='shifts'} id="staff-view-shifts" role="tabpanel" aria-labelledby="staff-section-shifts"><div className="staff-section-intro"><Clock3 size={20}/><div><h2>Shift templates</h2><p>Create working hours here. Assign a shift and review performance from the employee’s Details page.</p></div></div><ShiftManager/></section>}
+ {editor&&<StaffEditorPanel key={editor.staff?.id||'new'} staff={editor.staff} roles={roles} busy={busy} error={error} close={()=>setEditor(undefined)} save={async body=>{const ok=await save(editor.staff?'/api/users/'+editor.staff.id:'/api/users',body,editor.staff?'PATCH':'POST');if(ok){setEditor(undefined);if(!editor.staff){reset();showSection('accounts');}}return ok;}}/>}
+ </div>;
 }
-
-
