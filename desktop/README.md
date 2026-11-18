@@ -7,9 +7,13 @@ Offline-first cashier desktop for Windows 10/11 x64. Electron, React, TypeScript
 1. Install the latest version from https://alpine-simple-admin.vercel.app/download/windows . The initial Windows installer has no commercial publisher certificate; do not use an installer from an unknown source.
 2. Connect to the internet, sign in with your cashier account and choose a vacant counter or accept a handover. Open the day with actual opening cash.
 3. Select the installed physical 80mm receipt printer in Settings. Select RONGTA / 80mm thermal - direct auto cut (the default). It sends English receipt text and cutter commands straight through Winspool, avoiding Chromium custom-page blank receipts. Use Print test slip. For other printers select Windows driver and configure 80mm paper, no margins and Full cut in the driver.
-4. Search an item code/name, select it, enter quantity and press Enter. The search clears after quantity is added. F5 saves the local order and queues the bill; Parcel adds a separate token. Collect payment from Orders. Collection does not auto-print another copy.
+4. Search an item code/name, select it, enter quantity and press Enter. The search clears after quantity is added. F5 saves the local order and queues the bill; Parcel adds a separate token. Collect payment from Orders. The compact form starts with a Cash dropdown and the full amount; change the method or add split rows only when needed. Cash received and change are calculated from the cash portion. Discounts update the amount automatically, and existing discounts stay locked after the first collection. Collection does not auto-print another copy.
 5. Local orders, corrections, refunds and USB printing work offline during the valid eight-hour signed-in session. Internet is required for a new login, receiving waiter-phone orders, synchronization, handover/release and downloading updates. A LAN printer still needs its local network.
 6. Keep the app open for incoming orders. Sync all pending transactions and finish drafts/printing before a handover or update. Use Orders → Reprint only when needed.
+
+## Interface
+
+The counter uses the requested off-white canvas (#F8FAFC), navy sidebar (#1E293B), blue actions (#2563EB) and emerald collection actions (#10B981). Routine dialogs stay compact and keyboard accessible. Toast-style success/error/info/warning cards support dismissal, duplicate suppression, timed progress and pause on hover/focus. Cashier actions, connectivity changes and newly confirmed waiter orders notify without refreshing the screen. Receipts use the compact restaurant header, invoice/date/type/waiter, item/rate/quantity/amount and totals layout; discount appears only when applied.
 
 ## Data and reconciliation
 

@@ -1,5 +1,7 @@
-/* ── Dialog ── */
-import React,{useEffect,useRef,useState} from 'react';
-import type {Snapshot} from '../../../shared/desktop/contracts';import type {Order,MenuItem} from '../../../shared/types/workspace';import type {CashMethod} from '../../../shared/types/simpleCash';import type {State,EntryLine} from '../model';
-import {api,money,number,gross,paid,bill,due,fish,balances,reportFor} from '../helpers';
-export function Dialog({title,children,close}:{title:string;children:React.ReactNode;close:()=>void}){return <div className="overlay"><section className="dialog"><header><h2>{title}</h2><button className="icon" onClick={close}>×</button></header>{children}</section></div>;}
+/* ── Sized dialogs keep routine forms compact and keyboard focus inside the form ── */
+import React,{useEffect,useId,useRef} from 'react';
+export function Dialog({title,children,close,size='wide',error}:{title:string;children:React.ReactNode;close:()=>void;size?:'compact'|'wide';error?:string}){
+ const label=useId(),panel=useRef<HTMLElement>(null),previousFocus=useRef(document.activeElement as HTMLElement|null),latestClose=useRef(close);latestClose.current=close;
+ useEffect(()=>{const previous=previousFocus.current;const active=panel.current;if(active&&!active.contains(document.activeElement))(active.querySelector('input:not([readonly]),select,textarea,button') as HTMLElement|null)?.focus();const key=(event:KeyboardEvent)=>{if(event.key==='Escape'){event.preventDefault();latestClose.current();}if(event.key==='Tab'){const items=Array.from(panel.current?.querySelectorAll<HTMLElement>('button,input,select,textarea,[tabindex]:not([tabindex="-1"])')||[]).filter(e=>!e.matches(':disabled')&&e.getClientRects().length>0),first=items[0],last=items[items.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}}};document.addEventListener('keydown',key);return()=>{document.removeEventListener('keydown',key);if(previous?.isConnected)previous.focus();};},[]);
+ return <div className="overlay"><section className={'dialog dialog-'+size} ref={panel} role="dialog" aria-modal="true" aria-labelledby={label}><header><h2 id={label}>{title}</h2><button type="button" className="icon" aria-label="Close dialog" onClick={close}>×</button></header>{error&&<p className="payment-error dialog-error" role="alert">{error}</p>}{children}</section></div>;
+}

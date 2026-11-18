@@ -1,0 +1,15 @@
+/* ── Presentation model only: the shared financial engine remains the authority ── */
+import type {Order} from '../../shared/types/workspace';
+import type {CashMethod} from '../../shared/types/simpleCash';
+import {gross,paid,number} from './helpers';
+export interface PaymentRow {key:number;methodId:string;amount:string;automatic:boolean;}
+export const inputMoney=(cents:number)=>(cents/100).toFixed(2);
+const parse=(value:string)=>number(value.trim()||'0');
+export function paymentMethods(methods:CashMethod[],order:Order){return methods.filter(m=>m.active&&!m.deleted&&(m.kind!=='platform'||order.salesChannel==='foodpanda'));}
+export function paymentModel(order:Order,methods:CashMethod[],discount:string,rows:PaymentRow[],tendered:string){
+ const available=paymentMethods(methods,order),grossCents=gross(order),previous=paid(order),discountCents=parse(discount),validDiscount=Number.isSafeInteger(discountCents)&&discountCents>=0&&discountCents<=grossCents&&(!order.payments?.length||discountCents===(order.discountCents||0));
+ const target=Math.max(0,grossCents-(validDiscount?discountCents:order.discountCents||0)-previous),manualTotal=rows.filter(r=>!r.automatic).reduce((n,r)=>n+(Number.isSafeInteger(parse(r.amount))?parse(r.amount):0),0);
+ const values=rows.map(row=>({...row,cents:row.automatic?Math.max(0,target-manualTotal):parse(row.amount)})),sum=values.reduce((n,r)=>n+(Number.isSafeInteger(r.cents)?r.cents:0),0),cashDue=values.filter(r=>available.find(m=>m.id===r.methodId)?.kind==='cash').reduce((n,r)=>n+(Number.isSafeInteger(r.cents)?r.cents:0),0),cashReceived=tendered.trim()?parse(tendered):cashDue,shortCash=cashDue>0&&(!Number.isSafeInteger(cashReceived)||cashReceived<cashDue),change=cashDue&&Number.isSafeInteger(cashReceived)?Math.max(0,cashReceived-cashDue):0;
+ let error='';if(grossCents-(order.discountCents||0)-previous<=0)error='This bill is already settled.';else if(!validDiscount)error=order.payments?.length?'Discount is locked after the first collection.':'Enter a discount between zero and the bill total, with up to two decimals.';else if(target>0&&(!values.length||values.some(r=>!available.some(m=>m.id===r.methodId))))error='Choose an available payment method.';else if(target>0&&new Set(values.map(r=>r.methodId)).size!==values.length)error='Use each payment method once.';else if(target>0&&sum>target)error='Payment amounts exceed the payable total.';else if(target>0&&values.some(r=>!Number.isSafeInteger(r.cents)||r.cents<=0))error='Enter a positive amount for each selected payment method.';else if(shortCash)error=Number.isSafeInteger(cashReceived)?'Cash received is less than the cash applied to this bill.':'Enter valid cash received, with up to two decimals.';
+ return {available,values,grossCents,previous,target,sum,cashDue,cashReceived,shortCash,change,remaining:Math.max(0,target-sum),error,valid:!error,payload:{discount:inputMoney(validDiscount?discountCents:0),allocations:target===0?[]:values.filter(r=>r.cents>0).map(r=>({methodId:r.methodId,amount:inputMoney(r.cents)})),...(target>0&&cashDue>0?{tenderedCash:inputMoney(cashReceived)}:{})}};
+}
