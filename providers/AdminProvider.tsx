@@ -1,7 +1,7 @@
 /* ── Provider: AdminProvider ────────────────────────────────────────────── */
 "use client";
 /* ────────── imports ────────── */
-import ParcelHandoffPrinter from "@/components/orders/ParcelHandoffPrinter";
+import OrderAutoPrinter from "@/components/orders/ParcelHandoffPrinter";
 import type { ReactNode } from "react";
 import { AdminContext } from "@/context/AdminContext";
 import { useAdminWorkspace } from "@/hooks/useAdminWorkspace";
@@ -10,6 +10,6 @@ import { useAdminWorkspace } from "@/hooks/useAdminWorkspace";
 export default function AdminProvider({ children }: { children: ReactNode }) {
   const workspace = useAdminWorkspace();
   return (
-    <AdminContext.Provider value={workspace}><ParcelHandoffPrinter/>{children}</AdminContext.Provider>
+    <AdminContext.Provider value={workspace}><OrderAutoPrinter/>{children}</AdminContext.Provider>
   );
 }

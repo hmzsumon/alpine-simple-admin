@@ -43,7 +43,7 @@ if($chrome){
  $shell=New-Object -ComObject WScript.Shell
  $link=$shell.CreateShortcut((Join-Path ([Environment]::GetFolderPath('DesktopDirectory')) 'Alpine Cashier - Auto Print.lnk'))
  $link.TargetPath=$chrome
- $link.Arguments='--app=https://alpine-simple-admin.vercel.app --kiosk-printing --no-first-run --user-data-dir="'+$profile+'"'
+ $link.Arguments='--app=https://alpine-simple-admin.vercel.app/cash?autoPrint=1 --kiosk-printing --no-first-run --user-data-dir="'+$profile+'"'
  $link.Description='Alpine cashier: receipt and parcel token printing'
  $link.Save()
  Write-Host 'Open Alpine Cashier - Auto Print on the desktop and sign in. This avoids extra browser print-confirmation clicks.' -ForegroundColor Green

@@ -248,15 +248,16 @@ export const guides:Guide[]=[
   },
   {
     "slug": "printing",
-    "title": "Print compact bills and enable auto-cut",
+    "title": "Automatic bill printing and printer setup",
     "category": "Reporting",
-    "summary": "Print a narrow receipt and a separate customer parcel token with minimal paper feed.",
+    "summary": "Print one bill automatically when an order is confirmed, plus a separate parcel token. Reprint only when needed.",
     "audience": "Owner / Admin / Cashier",
     "steps": [
       "On each cashier PC, install the correct receipt-printer driver and select its 80mm / 72.1mm printable media. Keep portrait orientation, 100% scale, no margins and browser headers/footers off.",
       "Enable Full cut / Cut after document in Windows Printing preferences. For the supported Rongta 80Normal driver, download the Windows auto-cut setup below and run it in Windows PowerShell as Administrator. If Chrome is installed, it also creates an Alpine Cashier - Auto Print desktop shortcut with a separate printing profile.",
       "If Windows blocks the downloaded script, run it from an elevated PowerShell window with: powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$env:USERPROFILE\\Downloads\\ENABLE-ALPINE-AUTOCUT.ps1\". Select the exact receipt printer if asked. This changes only that printer and saves the original preferences.",
-      "Confirm a fully paid bill or use Bill preview > Print. A parcel bill is submitted first, followed by its small customer token as a separate print document. The same invoice and parcel number appear on both.",
+      "Download Auto Print setup and run it on the cashier PC: powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$env:USERPROFILE\\Downloads\\ENABLE-ALPINE-AUTO-PRINT.ps1\". Choose the receipt printer. This creates an Alpine Cashier - Auto Print shortcut with a separate Chrome printing profile. Open that shortcut, sign in as the responsible cashier and keep its window open.",
+      "Saving a counter order or confirming a waiter booking queues one automatic bill. Editable bookings do not print. Parcel and Foodpanda orders also print their matching customer token as a separate document. Payment collection does not print another copy; use Reprint bill if the bill changes or another copy is needed.",
       "Use Token only if only the small customer token needs another copy. A reprint never collects another payment. Ordinary browser windows may show two print dialogs; use the cashier Chrome kiosk-printing shortcut for unattended printing.",
       "Use Compact PDF only when saving a PDF. Physical receipt printing uses the driver paper size and starts at the top."
     ],
@@ -264,11 +265,13 @@ export const guides:Guide[]=[
       "title": "Parcel bill and token",
       "steps": [
         "A parcel order has invoice B-20261117-C01-0005 and parcel token P-0005.",
-        "After confirmed full payment, the printer receives the bill and then the token as separate documents."
+        "When the parcel order is confirmed, the active counter cashier receives one bill and one separate token automatically."
       ],
       "result": "With a working auto-cutter and Full cut enabled in the driver, each document is cut at its end. The customer receives the small matching token."
     },
     "tips": [
+      "Keep one Auto Print PC active for each counter. A second automatic-print PC with the same cashier can claim a job first, although the same job cannot print twice automatically.",
+      "Auto Print must be opened through its desktop shortcut. Ordinary browser windows and phones do not claim automatic print jobs. Only orders confirmed after this feature is enabled receive new print jobs; old history is not reprinted.",
       "Printer preferences apply to each Windows PC separately. Logging into Alpine on another PC does not change that PC's printer driver settings.",
       "If beeping, flashing or Cutter Error returns, stop printing and check the cutter/paper path. A driver setting cannot repair a jammed or faulty cutter. The previous preferences are backed up under LOCALAPPDATA\\Alpine\\PrinterSetup.",
       "The receipt uses a conservative 68mm outer width so the amount column stays clear of the print edge. If a different printer still clips, verify its paper width and 100% scale.",

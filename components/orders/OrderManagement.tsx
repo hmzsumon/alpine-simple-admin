@@ -11,6 +11,7 @@ import Link from "next/link";
 
 import SearchBox from "@/components/ui/SearchBox";
 import DeletedOrderHistory from "./DeletedOrderHistory";
+import AutoPrintSetup from "./AutoPrintSetup";
 import OrderTable from "@/components/orders/OrderTable";
 
 export default function OrderManagement() {
@@ -31,7 +32,7 @@ export default function OrderManagement() {
           <h3>All orders</h3>
           <p>Order lifecycle and payment records</p>
         </div>
-        <div className="resource-actions">{user.role==="cashier" && can("orders:create") && <Link href="/orders/new" prefetch={false} className="primary">New order</Link>}{can("orders:create") && <Link href="/orders/new?table=PARCEL" prefetch={false} className="primary">New Parcel</Link>}<button className="secondary" onClick={exportOrders}>
+        <div className="resource-actions">{can("cash:operate")&&<AutoPrintSetup/>}{user.role==="cashier" && can("orders:create") && <Link href="/orders/new" prefetch={false} className="primary">New order</Link>}{can("orders:create") && <Link href="/orders/new?table=PARCEL" prefetch={false} className="primary">New Parcel</Link>}<button className="secondary" onClick={exportOrders}>
           <Download size={16} /> Export CSV
         </button></div>
       </div>
