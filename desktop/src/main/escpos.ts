@@ -1,0 +1,25 @@
+/* ── Native 80mm receipt: text and cutter commands, independent of Chromium page rendering ── */
+import type {Order} from '../../shared/types/workspace';import {billCents,paidCents} from '../../shared/desktop/core';
+export const COLUMNS=46;
+export function printText(value:unknown){return String(value??'').replace(/[০-৯]/g,d=>String('০১২৩৪৫৬৭৮৯'.indexOf(d))).normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[\u2018\u2019]/g,"'").replace(/[\u201c\u201d]/g,'"').replace(/[\u2013\u2014]/g,'-').replace(/[^\x20-\x7e]/g,' ').replace(/\s+/g,' ').trim();}
+export function wrapText(value:unknown,width=COLUMNS){const text=printText(value),lines:string[]=[];let remaining=text;while(remaining.length>width){let end=remaining.lastIndexOf(' ',width);if(end<width/2)end=width;lines.push(remaining.slice(0,end));remaining=remaining.slice(end).trimStart();}if(remaining)lines.push(remaining);return lines.length?lines:[''];}
+const amount=(cents:number)=>(cents/100).toFixed(2);
+export function receiptLines(order:Order,part:'bill'|'token'):string[]{
+ if(part==='token')return ['ALPINE - CUSTOMER PARCEL TOKEN',printText(order.parcelToken),printText(order.simpleBillNo),...wrapText(order.simpleCounterName)];
+ const lines:string[]=[];const row=(label:string,value:string)=>{const left=printText(label),right=printText(value);if(left.length+right.length+1>COLUMNS){lines.push(...wrapText(left));lines.push(right.padStart(COLUMNS));}else lines.push(left+' '.repeat(COLUMNS-left.length-right.length)+right);};
+ lines.push('Alpine Restaurant','Chowhatta, Sylhet-3100','Mobile: 01715-19 55 50');if(order.id==='PRINTER-TEST')lines.push('TEST PRINT - NOT A SALE');
+ lines.push(order.paymentStatus==='paid'||order.status==='Paid'?'Paid':'Customer bill');
+ if(order.orderType==='takeaway')lines.push(...wrapText((order.salesChannel==='foodpanda'?'Foodpanda':'Parcel')+' - '+(order.parcelToken||'')));else lines.push(...wrapText((order.hallName||'Hall')+' - Table '+(order.tableName||order.table)));
+ if(order.simpleCounterName)lines.push(...wrapText('Counter: '+order.simpleCounterName));lines.push(...wrapText(order.simpleBillNo||order.id));lines.push(new Date(order.createdAt).toLocaleString('en-GB',{timeZone:'Asia/Dhaka',hour12:false}));
+ if(order.orderType!=='takeaway'&&order.waiter)lines.push(...wrapText('Waiter: '+order.waiter));lines.push('-'.repeat(COLUMNS));lines.push('ITEM'.padEnd(22)+'RATE'.padStart(8)+'QTY'.padStart(4)+'AMOUNT'.padStart(12));
+ for(const [index,item] of order.items.entries()){const name=wrapText((index+1)+'. '+(printText(item.name)||'Item '+(index+1)),22),rate=amount(Math.round(item.price*100)),qty=String(item.quantity),total=amount(Math.round(item.price*100)*item.quantity);if(rate.length>8||qty.length>4||total.length>12){lines.push(...wrapText((index+1)+'. '+item.name));row('@ '+rate+' x '+qty,total);}else{lines.push(name[0].padEnd(22)+rate.padStart(8)+qty.padStart(4)+total.padStart(12));for(const continuation of name.slice(1))lines.push(continuation);}}
+ lines.push('-'.repeat(COLUMNS));row('Sale total',amount(order.items.reduce((n,l)=>n+Math.round(l.price*100)*l.quantity,0)));if(order.packingCharge)row('Packing',amount(Math.round(order.packingCharge*100)));if(order.discountCents)row('Discount',amount(order.discountCents));row('Net payable (BDT)',amount(billCents(order)));
+ if(paidCents(order)){const methods=new Map<string,{name:string;cents:number}>();for(const payment of order.payments||[])for(const allocation of payment.allocations){const key=allocation.methodId+'|'+allocation.kind,old=methods.get(key);methods.set(key,{name:allocation.name,cents:(old?.cents||0)+allocation.cents});}for(const value of methods.values())if(value.cents)row(value.name,amount(value.cents));const cash=(order.payments||[]).filter(p=>!p.refund&&!p.correction&&p.tenderedCashCents!==undefined).at(-1);if(cash){row('Customer paid (cash)',amount(cash.tenderedCashCents!));row('Change returned',amount(cash.changeCents||0));}}
+ return lines;
+}
+export function rawReceipt(order:Order,part:'bill'|'token'):Buffer{
+ const chunks:Buffer[]=[Buffer.from([27,64,27,77,0,27,116,0,29,33,0,27,97,0,29,76,0,0,29,87,40,2,27,51,24])];const command=(...bytes:number[])=>chunks.push(Buffer.from(bytes));const text=(s:string)=>chunks.push(Buffer.from(s+'\n','ascii'));const lines=receiptLines(order,part);
+ if(part==='token'){command(27,97,1);text(lines[0]);const token=lines[1]||'TOKEN';command(29,33,token.length<=15?34:token.length<=23?17:0);for(const line of wrapText(token,token.length<=15?15:token.length<=23?23:COLUMNS))text(line);command(29,33,0);for(const line of lines.slice(2))text(line);}else{command(27,97,1,27,69,1,29,33,17);text(lines[0]);command(29,33,0,27,69,0);text(lines[1]);text(lines[2]);command(27,97,0);for(const line of lines.slice(3)){if(line.startsWith('Net payable'))command(27,69,1);text(line);if(line.startsWith('Net payable'))command(27,69,0);}}
+ // Feed only to the cutter position and full-cut once; no blank pages or driver form feed.
+ command(29,33,0,27,97,0,29,86,65,0);return Buffer.concat(chunks);
+}
