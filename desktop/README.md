@@ -17,7 +17,9 @@ The database and Windows-encrypted session are stored under Electron userData in
 
 Each money command saves its resulting state, exact sequential outbox event and automatic print intent in one SQLite transaction (WAL + FULL). The server atomically applies the same reducer and records the event hash/sequence alongside its counter state. Retries acknowledge the existing event; they do not apply money twice. Menu grants are server-signed; old invoices retain their captured prices. Only the Fish category permits a per-order price override.
 
-A cashier holds one drawer; a drawer has one desktop writer. Browser financial writes and financial reset are blocked while it is reserved, but online waiter orders remain available. Disabling a staff account is enforced when requests reach the server; an offline PC cannot learn changes before reconnecting. Do not share Windows profiles or cashier credentials.
+A cashier holds one drawer; a drawer has one desktop writer. Transfer intents are saved before sending. Durable server receipts make handover/release retries safe even after another PC takes the drawer. An interrupted transfer resumes on reconnect or after the original cashier signs in again.
+
+Browser financial writes and financial reset are blocked while it is reserved, but online waiter orders remain available. Disabling a staff account is enforced when requests reach the server; an offline PC cannot learn changes before reconnecting. Do not share Windows profiles or cashier credentials.
 
 Conflicting money changes stay in the outbox and stop new financial writes for Owner review. They are never silently overwritten. Unseen waiter orders can prevent a saved closing from being accepted; only that rejected closing is rolled back, retaining all acknowledged money. Sync and settle those bills before closing again. A saved but unconfirmed closing blocks opening another day. Hardware loss requires developer-assisted recovery from the original disk/backup; there is no unsafe force release that discards an unknown outbox.
 
