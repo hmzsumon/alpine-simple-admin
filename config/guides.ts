@@ -1,5 +1,43 @@
 export interface Guide {slug:string;title:string;category:string;summary:string;audience:string;steps:string[];example:{title:string;steps:string[];result:string};tips:string[];related:string[];}
 export const guides:Guide[]=[
+{
+  "slug": "windows-counter",
+  "title": "Windows cash counter · offline orders and auto print",
+  "category": "Counter setup",
+  "summary": "Install Alpine Cash Counter on Windows 10/11 x64. Sign in online once, select your drawer and receipt printer, then take local orders.",
+  "audience": "Owner / Admin / Cashier",
+  "steps": [
+    "Download the latest installer at https://alpine-simple-admin.vercel.app/download/windows and install it on the cashier PC. The initial installer has no commercial Windows publisher certificate; verify that it came from this Alpine link.",
+    "Open Alpine Cash Counter. Connect to the internet and sign in with your own cashier account. Choose the correct vacant counter, or accept its handover invitation. Owner/Admin continue using the web panel for management.",
+    "Open the cash day with the actual petty cash. In Settings choose the installed physical 80mm receipt printer. Set its Windows driver to 80mm roll paper, no margins, and Full cut / Cut after document. Use Print test slip once.",
+    "Take a dine-in, Parcel or Foodpanda order. Search code/name, choose item, enter quantity and press Enter. The search clears after adding. F5 saves to the local database and queues the bill automatically; Parcel adds a separate token. Collection does not automatically print a second copy.",
+    "Disconnecting internet does not stop local orders, collections or USB printing during the valid signed-in session. The session expires after eight hours; reconnect to sign in again. Waiter phones require internet and reach the PC when it reconnects. LAN printers still need the local network.",
+    "Keep this app open for incoming waiter orders. Watch the to-sync count. Admin menu/staff changes arrive while connected; saved invoices keep their prices. A drawer is reserved to one desktop; the browser shows synced figures and blocks conflicting writes.",
+    "Before handover, release, logout or installing an update, sync every transaction, clear/save the draft and finish/review the print queue. Handovers and releasing the drawer require internet. The receiving cashier signs in online and accepts the handover.",
+    "Settings checks and downloads Alpine-signed updates in the background. Click Update during break after syncing. Local data stays in Windows app data, outside the installation folder. Use Save local backup regularly."
+  ],
+  "example": {
+    "title": "Offline cash collection",
+    "steps": [
+      "Open petty cash BDT 1,000. Save a BDT 120 parcel order while offline.",
+      "Collect BDT 120 cash; customer gives BDT 200. Return BDT 80.",
+      "Reconnect. The same saved event uploads once, and no second auto-print is created."
+    ],
+    "result": "Expected cash is BDT 1,120. The order and payment appear in the admin panel after synchronization."
+  },
+  "tips": [
+    "Keep one writer PC per counter. Never delete app data, reinstall Windows or move to another PC before syncing and saving a backup. If the original PC fails, retain its disk/database for developer-assisted recovery; the counter is not force-released automatically.",
+    "An uncertain print job pauses the queue. Check the paper, mark it reviewed and use Orders → Reprint only if necessary. Windows submission is not proof that paper physically printed.",
+    "Resolve unpaid bills and receive all waiter orders before closing the day. If an unseen online change conflicts with saved offline work, the app keeps it for Owner review instead of silently overwriting money. Do not repeat the order in the browser.",
+    "Windows 10/11 x64 is the target. This initial release was tested on Windows 11; real printer/Windows 10 acceptance must be checked on the counter PC."
+  ],
+  "related": [
+    "printing",
+    "cashier",
+    "handover",
+    "closing"
+  ]
+},
   {
     "slug": "quick-start",
     "title": "Start the day in five steps",

@@ -1,0 +1,5 @@
+/* ── CashMovement ── */
+import React,{useEffect,useRef,useState} from 'react';
+import type {Snapshot} from '../../../shared/desktop/contracts';import type {Order,MenuItem} from '../../../shared/types/workspace';import type {CashMethod} from '../../../shared/types/simpleCash';import type {State,EntryLine} from '../model';
+import {api,money,number,gross,paid,bill,due,fish,balances,reportFor} from '../helpers';
+export function CashMovement({locked,submit}:{locked:boolean;submit:(v:any)=>void}){return <section className="panel narrow"><h1>Cash in / payout</h1><form onSubmit={e=>{e.preventDefault();submit(Object.fromEntries(new FormData(e.currentTarget)));}}><fieldset disabled={locked}><label>Type<select name="kind"><option value="out">Cash payout</option><option value="in">Cash deposit</option></select></label><label>Amount<input name="amount" required inputMode="decimal"/></label><label>Paid to / received from<input name="party" required/></label><label>Purpose<input name="purpose" required/></label><label>Note<textarea name="note"/></label><button className="primary">Save movement</button></fieldset></form></section>;}

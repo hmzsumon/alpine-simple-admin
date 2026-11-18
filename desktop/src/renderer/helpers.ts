@@ -1,0 +1,11 @@
+import type {Snapshot} from '../../shared/desktop/contracts';import type {Order} from '../../shared/types/workspace';
+type Result<T>={ok:true;value:T}|{ok:false;error:string};declare global{interface Window{alpine:Record<string,(value?:any)=>Promise<Result<any>>>&{onChange:(fn:()=>void)=>()=>void};}}
+const api=async<T=any>(name:string,value?:unknown):Promise<T>=>{const r=await window.alpine[name](value);if(!r.ok)throw Error(r.error);return r.value;};
+const money=(n:number)=>'BDT '+(n/100).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});
+const number=(v:unknown)=>{const raw=String(v??'').replace(/[০-৯]/g,d=>String('০১২৩৪৫৬৭৮৯'.indexOf(d)));return /^\d+(?:\.\d{1,2})?$/.test(raw)?Math.round(Number(raw)*100):NaN;};
+const gross=(o:Order)=>o.items.reduce((n,l)=>n+Math.round(l.price*100)*l.quantity,0)+Math.round((o.packingCharge||0)*100),paid=(o:Order)=>(o.payments||[]).reduce((n,p)=>n+p.totalCents,0),bill=(o:Order)=>gross(o)-(o.discountCents||0),due=(o:Order)=>Math.max(0,bill(o)-paid(o));
+const fish=(c:string)=>['fish','মাছ','fish & seafood'].includes(c.normalize('NFKC').trim().toLowerCase());
+
+function balances(o:Order){const map=new Map<string,{id:string;name:string;kind:string;cents:number}>();for(const p of o.payments||[])for(const a of p.allocations){const key=a.methodId+'|'+a.kind,old=map.get(key);map.set(key,{id:a.methodId,name:a.name,kind:a.kind,cents:(old?.cents||0)+a.cents});}return [...map.values()].filter(v=>v.cents>0);}
+function reportFor(s:Snapshot){if(!s.day)return null;const valid=s.orders.filter(o=>o.status!=='Cancelled'&&o.bookingState!=='booking');const byMethod=new Map<string,{id:string;name:string;kind:string;cents:number}>();for(const o of valid)for(const p of o.payments||[])for(const a of p.allocations){const previous=byMethod.get(a.methodId);byMethod.set(a.methodId,{...a,id:a.methodId,cents:(previous?.cents||0)+a.cents});}return {sales:valid.reduce((n,o)=>n+bill(o),0),due:valid.reduce((n,o)=>n+due(o),0),byMethod:[...byMethod.values()],expectedCash:s.day.openingCents+[...byMethod.values()].filter(m=>m.kind==='cash').reduce((n,m)=>n+m.cents,0)+s.day.movements.reduce((n,m)=>n+(m.kind==='in'?m.cents:-m.cents),0)+s.day.handovers.filter(h=>h.acceptedAt).reduce((n,h)=>n+h.differenceCents,0)};}
+export {api,money,number,gross,paid,bill,due,fish,balances,reportFor};
