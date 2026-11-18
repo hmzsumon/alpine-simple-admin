@@ -1,0 +1,6 @@
+/* ── Counter routing is already resolved by the signed server catalog ── */
+import type {Catalog} from '../../shared/desktop/contracts';
+export interface SearchOption {id:string;label:string;detail?:string;search?:string;}
+export const normalizeSearch=(value:string)=>value.normalize('NFKC').toLowerCase().replace(/[০-৯]/g,d=>String('০১২৩৪৫৬৭৮৯'.indexOf(d))).trim();
+export function searchOptions(options:SearchOption[],query:string){const q=normalizeSearch(query);if(!q)return options;const terms=q.split(/\s+/);return options.filter(o=>terms.every(t=>normalizeSearch([o.label,o.detail,o.search].join(' ')).includes(t))).sort((a,b)=>Number(normalizeSearch(b.search||b.label)===q)-Number(normalizeSearch(a.search||a.label)===q));}
+export function counterOptions(catalog:Catalog){const halls=catalog.halls.filter(h=>h.counterId===catalog.counter.id),ids=new Set(halls.map(h=>h.id));const tables=catalog.tables.filter(t=>!!t.hallId&&ids.has(t.hallId)).sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true})).map(t=>({id:t.id,label:'Table '+t.name,detail:halls.find(h=>h.id===t.hallId)?.name,search:t.name}));const waiters:SearchOption[]=[{id:'',label:'Counter sale',detail:catalog.user.name},...catalog.waiters.map(w=>({id:w.id,label:w.name,detail:w.phone,search:w.phone}))];return {halls,tables,waiters};}

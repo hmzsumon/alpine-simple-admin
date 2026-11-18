@@ -28,7 +28,7 @@ export const guides:Guide[]=[
   "tips": [
     "Keep one writer PC per counter. Never delete app data, reinstall Windows or move to another PC before syncing and saving a backup. If the original PC fails, retain its disk/database for developer-assisted recovery; the counter is not force-released automatically.",
     "An uncertain print job pauses the queue. Check the paper, mark it reviewed and use Orders → Reprint only if necessary. Windows submission is not proof that paper physically printed.",
-    "Resolve unpaid bills and receive all waiter orders before closing the day. If an unseen online change conflicts with saved offline work, the app keeps it for Owner review instead of silently overwriting money. Do not repeat the order in the browser.",
+    "Resolve confirmed unpaid bills before closing. Closing automatically deletes all pending waiter bookings for that counter; other counters and settled bill history remain intact. If an unseen online change conflicts with saved offline work, the app keeps it for Owner review instead of silently overwriting money. Do not repeat the order in the browser.",
     "Windows 10/11 x64 is the target. This initial release was tested on Windows 11; real printer/Windows 10 acceptance must be checked on the counter PC."
   ],
   "related": [

@@ -1,6 +1,6 @@
 {
   "name": "alpine-counter-desktop",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "private": true,
   "description": "Offline-first Alpine cashier for Windows 10/11 x64",
   "author": "Alpine Restaurant",

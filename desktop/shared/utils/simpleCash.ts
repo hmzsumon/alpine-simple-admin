@@ -39,7 +39,7 @@ export function acceptHandover(day:CashDay,actorId:string,at:string) {
   return {...day,custodianId:handover.toId,custodianName:handover.toName,pending:undefined,handovers:[...day.handovers,{...handover,acceptedAt:at}]};
 }
 export function closeDay(day:CashDay,orders:Order[],counted:unknown,reason:unknown,actor:{id:string;name:string},at:string) {
-  canOperate(day,actor);if(orders.some(o=>o.simpleDayId===day.id&&(o.simpleCounterId||"main")===(day.counterId||"main")&&o.bookingState==="booking"&&o.status!=="Cancelled"))throw new ApiError(409,"Finalize or cancel all bookings before closing.");const report=dayReport(day,orders);if(report.due>0)throw new ApiError(409,"বাকি বিল মেটান। ভুল অর্ডার হলে বাতিল করুন। তারপর দিন বন্ধ করুন।");
+  canOperate(day,actor);const report=dayReport(day,orders);if(report.due>0)throw new ApiError(409,"বাকি বিল মেটান। ভুল অর্ডার হলে বাতিল করুন। তারপর দিন বন্ধ করুন।");
   const amount=cents(counted),difference=amount-report.expectedCash;
   return {...day,closedAt:at,closedBy:actor.name,countedCents:amount,differenceCents:difference,closeReason:difference?text(reason,"ঘাটতি / বাড়তির কারণ",300):typeof reason==="string"?reason.slice(0,300):""};
 }

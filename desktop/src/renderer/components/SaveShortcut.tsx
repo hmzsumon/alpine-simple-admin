@@ -1,5 +1,3 @@
-/* ── SaveShortcut ── */
-import React,{useEffect,useRef,useState} from 'react';
-import type {Snapshot} from '../../../shared/desktop/contracts';import type {Order,MenuItem} from '../../../shared/types/workspace';import type {CashMethod} from '../../../shared/types/simpleCash';import type {State,EntryLine} from '../model';
-import {api,money,number,gross,paid,bill,due,fish,balances,reportFor} from '../helpers';
-export function SaveShortcut({submit}:{submit:()=>void}){useEffect(()=>{const key=(e:KeyboardEvent)=>{if(e.key==='F5'){e.preventDefault();submit();}};window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);},[submit]);return null;}
+/* ── Stable keyboard entry shortcuts, disabled behind payment dialogs ── */
+import {useEffect} from 'react';
+export function SaveShortcut({submit,focus}:{submit:(collect?:boolean)=>void;focus:(field:'item'|'table'|'waiter'|'channel')=>void}){useEffect(()=>{const key=(e:KeyboardEvent)=>{if(document.querySelector('[role="dialog"]')||e.repeat)return;if(e.key==='F5'||e.key==='F6'||(e.ctrlKey&&e.key==='Enter')){e.preventDefault();submit(e.key==='F6');return;}const fields:Record<string,'item'|'table'|'waiter'|'channel'>={F1:'item',F2:'item',F7:'channel',F8:'table',F9:'waiter'};if(fields[e.key]){e.preventDefault();focus(fields[e.key]);}};window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);},[submit,focus]);return null;}

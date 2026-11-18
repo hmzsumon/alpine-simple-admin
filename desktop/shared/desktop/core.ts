@@ -21,7 +21,7 @@ export function applyCommand(original:Snapshot,event:DesktopCommand):Snapshot {
  need('cash:operate');let day=state.day;
  if(event.action==='open'){
   if(day&&!day.closedAt)throw new ApiError(409,'Close the current cash day first.');if(day?.closedAt&&day.id===businessDate(at))throw new ApiError(409,'This cash day is already closed.');
-  if(state.orders.some(o=>!['Paid','Cancelled'].includes(o.status)))throw new ApiError(409,'Settle previous orders before opening a day.');
+  if(state.orders.some(o=>o.bookingState!=='booking'&&!['Paid','Cancelled'].includes(o.status)))throw new ApiError(409,'Settle previous orders before opening a day.');
   day={id:businessDate(at),counterId:c.counter.id,counterName:c.counter.name,counterCode:c.counter.code,openedAt:at,openedBy:user.name,openingCents:cents(body.amount),openingCustodianId:user.id,openingCustodianName:user.name,custodianId:user.id,custodianName:user.name,sequence:0,orderSequence:0,movements:[],handovers:[],commands:[]};state.orders=[];
  }else{
   if(!day)throw new ApiError(409,'Open the cash day first.');canOperate(day,user);
