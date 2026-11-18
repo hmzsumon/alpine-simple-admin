@@ -1,5 +1,7 @@
 /* ── Component: receipt preview and browser printing; never changes payment or order state ── */
 "use client";
+import {hasParcelTea} from '@/utils/parcelPrinting';
+import ParcelKitchenCopy from '@/components/orders/ParcelKitchenCopy';
 import {paymentMethodBalances} from '@/utils/paymentBalances';
 import {printBill} from "@/lib/billPrinting";
 import LiveDocument from "@/components/ui/LiveDocument";
@@ -13,7 +15,7 @@ import "./printable-bill.css";
 import {taka,channelName} from "@/utils/cashFormat";
 const amount = (value: number) => value.toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const date = (value: string) => new Date(value).toLocaleString("en-GB", { timeZone: "Asia/Dhaka" });
-export default function PrintableBill({ order, printedBy, previewAt,paper="thermal",printPart="preview" }: {printPart?:"preview"|"bill"|"token";paper?:"a4"|"thermal"; order: Order; printedBy: string; previewAt: string }) {
+export default function PrintableBill({ order, printedBy, previewAt,paper="thermal",printPart="preview" }: {printPart?:"preview"|"bill"|"kitchen"|"token";paper?:"a4"|"thermal"; order: Order; printedBy: string; previewAt: string }) {
   const router = useRouter();
   const paid = paidOrder(order), cancelled = order.status === "Cancelled";
   const parcel = order.orderType==="takeaway" || order.salesChannel==="takeaway" || order.salesChannel==="foodpanda";
@@ -22,12 +24,12 @@ export default function PrintableBill({ order, printedBy, previewAt,paper="therm
     <nav className="bill-preview-toolbar" aria-label="Bill preview">
       <Link href="/orders"><ArrowLeft size={17} />Back to orders</Link>
       <button type="button" onClick={() => router.refresh()}><RefreshCw size={16} />Refresh</button>
-      <button type="button" className="bill-print-button" onClick={() => printBill(order.id)}><Printer size={17} />{parcel&&!cancelled?"Print bill + token":"Print"}</button>{parcel&&!cancelled&&<button type="button" onClick={()=>printBill(order.id,undefined,"token")}>Token only</button>}{paper==="thermal"&&<button type="button" onClick={()=>printDocument(true)}>Compact PDF</button>}
+      <button type="button" className="bill-print-button" onClick={() => printBill(order.id)}><Printer size={17} />{parcel&&!cancelled?(hasParcelTea(order)?"Print all 3 copies":"Print bill + token"):"Print"}</button>{parcel&&!cancelled&&<button type="button" onClick={()=>printBill(order.id,undefined,"token")}>Token only</button>}{hasParcelTea(order)&&!cancelled&&<button type="button" onClick={()=>printBill(order.id,undefined,"kitchen")}>Kitchen only</button>}{paper==="thermal"&&<button type="button" onClick={()=>printDocument(true)}>Compact PDF</button>}
     </nav>
-    <p className="bill-preview-help">{paper==="a4"?"A4 bill preview.":"80mm counter receipt preview."} Choose Print for the printer, or Compact PDF and Save as PDF. Turn off Headers and footers; use 100% scale and the shortest suitable roll paper size. Parcel bills and customer tokens print as separate documents. Enable Full cut / Cut after document in the printer driver. Printing does not change payment status.</p>
+    <p className="bill-preview-help">{paper==="a4"?"A4 bill preview.":"80mm counter receipt preview."} Choose Print for the printer, or Compact PDF and Save as PDF. Turn off Headers and footers; use 100% scale and the shortest suitable roll paper size. Parcel customer bills and tokens print separately. A kitchen copy is added only when the parcel contains tea. Enable Full cut / Cut after document in the printer driver. Printing does not change payment status.</p>
     <p className="bill-preview-help"><a href="/printer-setup/ENABLE-ALPINE-AUTOCUT.ps1" download>Windows auto-cut setup</a> · <a href="/guide/printing">Printer setup guide</a></p>
     <article data-print-part={printPart} className="bill-receipt" aria-label="Customer bill">
-      {printPart!=="token"&&<>
+      {(printPart==="preview"||printPart==="bill")&&<>
       <header><h1>Alpine Restaurant</h1><p>Chowhatta, Sylhet-3100</p><p>Mobile: 01715-19 55 50</p></header>
       <div className="bill-status">{cancelled ? "CANCELLED - not payable" : paid ? "Paid" : "Unpaid bill"}</div>
       <dl className="bill-meta">
@@ -49,11 +51,11 @@ export default function PrintableBill({ order, printedBy, previewAt,paper="therm
       {!!order.payments?.length&&<div className="bill-payment">{paymentMethodBalances(order.payments).map(a=><p className="cash-slip-row" key={a.methodId+"|"+a.kind}><span>{a.name}</span><strong>{taka(a.cents)}</strong></p>)}{!order.payments.some(p=>p.correction&&(p.correction.from.kind==="cash"||p.correction.to.kind==="cash"))&&order.payments.some(p=>p.tenderedCashCents!==undefined)?<><p className="cash-slip-row"><span>Customer paid (cash)</span><strong>{taka(order.payments.reduce((sum,p)=>sum+(p.tenderedCashCents??p.allocations.filter(a=>a.kind==="cash").reduce((n,a)=>n+a.cents,0)),0))}</strong></p><p className="cash-slip-row"><span>Change returned</span><strong>{taka(order.payments.reduce((sum,p)=>sum+(p.changeCents||0),0))}</strong></p></>:null}</div>}
       {!!order.payments?.some(p=>p.correction)&&<p className="cash-slip-row"><span>Payment method corrected</span></p>}{!!order.payments?.some(p=>p.refund)&&<p className="cash-slip-row"><span>Customer refunded</span><strong>{taka(-(order.payments||[]).filter(p=>p.refund).reduce((s,p)=>s+p.totalCents,0))}</strong></p>}
       </>}
-      {printPart!=="bill"&&parcel&&!cancelled&&<section className="parcel-token-slip" aria-label="Customer parcel token">
+      {printPart==="kitchen"&&hasParcelTea(order)&&!cancelled&&<ParcelKitchenCopy order={order}/>}{(printPart==="preview"||printPart==="token")&&parcel&&!cancelled&&<section className="parcel-token-slip" aria-label="Customer parcel token">
         <p className="parcel-token-heading">ALPINE · CUSTOMER PARCEL TOKEN</p>
         <strong className="parcel-token-number">{order.parcelToken||order.simpleBillNo||order.id}</strong>
         <p className="parcel-token-invoice">{order.simpleBillNo||order.id}</p>
-        <p className="parcel-token-context">{order.simpleCounterName||"Main counter"} · {paid?"Paid":"Payment pending"}</p>
+        <p className="parcel-token-total">Total (BDT): <strong>{amount(total(order))}</strong></p><p className="parcel-token-context">{order.simpleCounterName||"Main counter"} · {paid?"Paid":"Payment pending"}</p>
       </section>}
     </article>
   </main>;

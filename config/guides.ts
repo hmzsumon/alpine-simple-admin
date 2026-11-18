@@ -10,7 +10,7 @@ export const guides:Guide[]=[
     "Download the latest installer at https://alpine-simple-admin.vercel.app/download/windows and install it on the cashier PC. The initial installer has no commercial Windows publisher certificate; verify that it came from this Alpine link.",
     "Open Alpine Cash Counter. Connect to the internet and sign in with your own cashier account. Choose the correct vacant counter, or accept its handover invitation. Owner/Admin continue using the web panel for management.",
     "Open the cash day with the actual petty cash. In Settings choose the installed physical 80mm receipt printer and RONGTA / 80mm thermal - direct auto cut. Use Print test slip once. Direct mode prints English item names and cuts automatically. For other printers choose Windows driver, then configure 80mm roll paper, no margins and Full cut in that driver.",
-    "Take a dine-in, Parcel or Foodpanda order. Search code/name, choose item, enter quantity and press Enter. The search clears after adding. F5 saves to the local database and queues the bill automatically; Parcel adds a separate token. Collection does not automatically print a second copy.",
+    "Take a dine-in, Parcel or Foodpanda order. Search code/name, choose item, enter quantity and press Enter. The search clears after adding. F5 saves to the local database and queues the bill automatically; Parcel prints a customer bill and a token with total payable. A separate kitchen copy prints only when the parcel contains tea. Collection does not automatically print a second copy.",
     "Disconnecting internet does not stop local orders, collections or USB printing during the valid signed-in session. The session expires after eight hours; reconnect to sign in again. Waiter phones require internet and reach the PC when it reconnects. LAN printers still need the local network.",
     "Keep this app open for incoming waiter orders. Watch the to-sync count. Admin menu/staff changes arrive while connected; saved invoices keep their prices. A drawer is reserved to one desktop; the browser shows synced figures and blocks conflicting writes.",
     "Before handover, release, logout or installing an update, sync every transaction, clear/save the draft and finish/review the print queue. Handovers and releasing the drawer require internet. The receiving cashier signs in online and accepts the handover.",
@@ -288,24 +288,24 @@ export const guides:Guide[]=[
     "slug": "printing",
     "title": "Automatic bill printing and printer setup",
     "category": "Reporting",
-    "summary": "Print one bill automatically when an order is confirmed, plus a separate parcel token. Reprint only when needed.",
+    "summary": "Print one bill automatically when an order is confirmed, plus a separate parcel token with total payable; a kitchen copy is added only for parcel tea. Reprint only when needed.",
     "audience": "Owner / Admin / Cashier",
     "steps": [
       "On each cashier PC, install the correct receipt-printer driver and select its 80mm / 72.1mm printable media. Keep portrait orientation, 100% scale, no margins and browser headers/footers off.",
       "Enable Full cut / Cut after document in Windows Printing preferences. For the supported Rongta 80Normal driver, download the Windows auto-cut setup below and run it in Windows PowerShell as Administrator. If Chrome is installed, it also creates an Alpine Cashier - Auto Print desktop shortcut with a separate printing profile.",
       "If Windows blocks the downloaded script, run it from an elevated PowerShell window with: powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$env:USERPROFILE\\Downloads\\ENABLE-ALPINE-AUTOCUT.ps1\". Select the exact receipt printer if asked. This changes only that printer and saves the original preferences.",
       "Download Auto Print setup and run it on the cashier PC: powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$env:USERPROFILE\\Downloads\\ENABLE-ALPINE-AUTO-PRINT.ps1\". Choose the receipt printer. This creates an Alpine Cashier - Auto Print shortcut with a separate Chrome printing profile. Open that shortcut, sign in as the responsible cashier and keep its window open.",
-      "Saving a counter order or confirming a waiter booking queues one automatic bill. Editable bookings do not print. Parcel and Foodpanda orders also print their matching customer token as a separate document. Payment collection does not print another copy; use Reprint bill if the bill changes or another copy is needed.",
-      "Use Token only if only the small customer token needs another copy. A reprint never collects another payment. Ordinary browser windows may show two print dialogs; use the cashier Chrome kiosk-printing shortcut for unattended printing.",
+      "Saving a counter order or confirming a waiter booking queues one automatic bill. Editable bookings do not print. Parcel and Foodpanda orders print a customer bill and matching token with total payable. A separate kitchen preparation copy is added only when the parcel contains tea. Payment collection does not print another copy; use Reprint bill if the bill changes or another copy is needed.",
+      "Use Kitchen only or Token only when just that copy is needed. A reprint never collects another payment. Ordinary browser windows may show three print dialogs; use the cashier Chrome kiosk-printing shortcut for unattended printing.",
       "Use Compact PDF only when saving a PDF. Physical receipt printing uses the driver paper size and starts at the top."
     ],
     "example": {
-      "title": "Parcel bill and token",
+      "title": "Parcel customer, kitchen and token copies",
       "steps": [
         "A parcel order has invoice B-20261117-C01-0005 and parcel token P-0005.",
-        "When the parcel order is confirmed, the active counter cashier receives one bill and one separate token automatically."
+        "When the parcel order is confirmed, the active counter cashier receives one customer bill and one separate token automatically; a parcel containing tea also receives a kitchen copy."
       ],
-      "result": "With a working auto-cutter and Full cut enabled in the driver, each document is cut at its end. The customer receives the small matching token."
+      "result": "With a working auto-cutter and Full cut enabled in the driver, each document is cut at its end. The kitchen receives its item/quantity copy; the customer receives the matching token showing total payable."
     },
     "tips": [
       "Keep one Auto Print PC active for each counter. A second automatic-print PC with the same cashier can claim a job first, although the same job cannot print twice automatically.",

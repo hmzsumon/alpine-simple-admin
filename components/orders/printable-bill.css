@@ -127,3 +127,7 @@
  .bill-receipt .compact-bill-items th:not(:first-child),.bill-receipt .compact-bill-items td:not(:first-child) { font-size:9.5px; padding-left:2px; }
  .bill-receipt .compact-bill-items th:nth-child(2),.bill-receipt .compact-bill-items td:nth-child(2) { padding-right:2px; }
 }
+
+.parcel-token-total { @apply my-1 text-[12px] leading-tight; }
+.kitchen-items th:first-child,.kitchen-items td:first-child { width:85%; }
+.kitchen-items th:last-child,.kitchen-items td:last-child { width:15%; text-align:right; }

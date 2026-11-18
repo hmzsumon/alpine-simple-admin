@@ -1,20 +1,20 @@
-/* ── Bill and customer token are separate driver documents; never repeat a payment ── */
+/* ── Customer bill, kitchen copy and token are separate driver documents; never repeat a payment ── */
 import {notify} from "@/lib/feedback";
-type Part="bill"|"token";
+type Part="bill"|"kitchen"|"token";
 interface Job {orderId:string;jobId:string;confirmationId?:string;first:Part;key:string;automatic:boolean;done:Promise<boolean>;complete:(success:boolean)=>void;}
 const jobs=new Map<string,Job>(),queue:Job[]=[];let active=false;
 function pump(){if(active)return;const job=queue.shift();if(!job)return;active=true;run(job,job.first);}
 function run(job:Job,part:Part){
- const frame=document.createElement("iframe");frame.title=part==="token"?"Customer parcel token printing":"Customer bill printing";frame.setAttribute("aria-hidden","true");frame.tabIndex=-1;
+ const frame=document.createElement("iframe");frame.title=part==="token"?"Customer parcel token printing":part==="kitchen"?"Parcel kitchen copy printing":"Customer bill printing";frame.setAttribute("aria-hidden","true");frame.tabIndex=-1;
  Object.assign(frame.style,{position:"fixed",left:"-10000px",top:"0",width:"80mm",height:"1000px",border:"0"});let settled=false;
  const cleanup=()=>{window.removeEventListener("message",message);clearTimeout(timeout);frame.remove();};
- const finish=(token=false,success=true)=>{if(settled)return;settled=true;cleanup();if(token){setTimeout(()=>run(job,"token"),0);return;}jobs.delete(job.key);job.complete(success);active=false;pump();};
- const fail=(text:string)=>{notify(text,"error");finish(false,false);};
+ const finish=(next:Part|null=null,success=true)=>{if(settled)return;settled=true;cleanup();if(next){setTimeout(()=>run(job,next),0);return;}jobs.delete(job.key);job.complete(success);active=false;pump();};
+ const fail=(text:string)=>{notify(text,"error");finish(null,false);};
  const message=(event:MessageEvent)=>{
   if(event.origin!==window.location.origin||event.source!==frame.contentWindow||event.data?.type!=="alpine:bill-print"||event.data.jobId!==job.jobId||(event.data.part||"bill")!==part)return;
   if(event.data.status==="started")return;
   if(event.data.status==="error"){fail(job.confirmationId?"The payment is saved. Printing could not start. Use Reprint bill or Token only; do not collect payment again.":"The order is saved. Printing could not start. Use Reprint bill or Token only and check the saved payment status.");return;}
-  if(event.data.status==="finished"||event.data.status==="skipped")finish(part==="bill"&&event.data.hasToken===true);
+  if(event.data.status==="finished"||event.data.status==="skipped")finish(event.data.hasToken===true&&part==="bill"?(event.data.hasKitchen===true?"kitchen":"token"):event.data.hasToken===true&&part==="kitchen"&&job.first==="bill"?"token":null);
  };
  const timeout=setTimeout(()=>fail("Printing could not be verified. Check the printer before requesting another copy."),120000);
  window.addEventListener("message",message);
