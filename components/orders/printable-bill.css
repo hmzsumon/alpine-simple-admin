@@ -131,3 +131,8 @@
 .parcel-token-total { @apply my-1 text-[12px] leading-tight; }
 .kitchen-items th:first-child,.kitchen-items td:first-child { width:85%; }
 .kitchen-items th:last-child,.kitchen-items td:last-child { width:15%; text-align:right; }
+
+/* ── Legible tea preparation copy with room for the Paid stamp ── */
+.parcel-kitchen-copy{font-size:16px;line-height:1.3;padding-bottom:18mm}.parcel-kitchen-copy .bill-items{font-size:16px}.parcel-kitchen-copy .bill-items small{font-size:13px}
+
+.parcel-kitchen-copy header p{font-size:16px;line-height:1.3}

@@ -31,3 +31,6 @@ nav button.active span{background:#1E40AF;color:#FFF}.notification-success .noti
 
 /* ── Consistent, centered dropdown chevrons for searchable waiter/table controls ── */
 .search-select-toggle{display:flex;align-items:center;justify-content:center;padding:0;color:#334155}.search-select-toggle svg{display:block;flex-shrink:0;pointer-events:none;transition:transform .15s ease}.search-select-control input[aria-expanded=true]+.search-select-toggle svg{transform:rotate(180deg)}
+
+/* ── Native order windows and recoverable drafts ── */
+.order-workspace-bar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:14px}.order-workspace-bar .order-tabs{margin:0}.saved-order-windows{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:18px;padding:12px 14px;border:1px solid #CBD5E1;border-radius:9px;background:#EFF6FF}.saved-order-windows>strong{font-size:12px;margin-right:5px}.saved-order-windows button span{color:#2563EB;margin-left:8px}.standalone-order{min-height:100vh}.standalone-order .content{max-width:1600px;margin:auto}.standalone-order .topbar{background:#FFF}.saved-order-notice{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px;padding:12px 15px;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:9px;font-size:12px;color:#065F46}

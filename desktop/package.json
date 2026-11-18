@@ -1,6 +1,6 @@
 {
   "name": "alpine-counter-desktop",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "private": true,
   "description": "Offline-first Alpine cashier for Windows 10/11 x64",
   "author": "Alpine Restaurant",
@@ -14,7 +14,8 @@
     "postinstall": "node scripts/share-core.cjs",
     "publish": "node scripts/publish.cjs",
     "smoke": "electron scripts/smoke.cjs",
-    "smoke:main": "electron scripts/main-smoke.cjs"
+    "smoke:main": "electron scripts/main-smoke.cjs",
+    "smoke:windows": "electron scripts/multi-window-smoke.cjs"
   },
   "dependencies": {
     "react": "18.3.1",

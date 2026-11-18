@@ -18,7 +18,7 @@ const date = (value: string) => new Date(value).toLocaleString("en-GB", { timeZo
 export default function PrintableBill({ order, printedBy, previewAt,paper="thermal",printPart="preview" }: {printPart?:"preview"|"bill"|"kitchen"|"token";paper?:"a4"|"thermal"; order: Order; printedBy: string; previewAt: string }) {
   const router = useRouter();
   const paid = paidOrder(order), cancelled = order.status === "Cancelled";
-  const parcel = order.orderType==="takeaway" || order.salesChannel==="takeaway" || order.salesChannel==="foodpanda";
+  const parcel = order.salesChannel!=="foodpanda"&&(order.orderType==="takeaway" || order.salesChannel==="takeaway" );
   const subtotal = order.items.reduce((sum, item) => sum + item.quantity * item.price, 0);
   return <main className={"bill-preview-page "+(paper==="a4"?"paper-a4":"")}><LiveDocument/><PaperSize paper={paper}/>
     <nav className="bill-preview-toolbar" aria-label="Bill preview">

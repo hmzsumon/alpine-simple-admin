@@ -6,7 +6,7 @@ import {money} from '../helpers';
 import {inputMoney,paymentMethods,paymentModel,type PaymentRow} from '../paymentModel';
 interface Props {order:Order;methods:CashMethod[];busy:boolean;submit:(value:ReturnType<typeof paymentModel>['payload'])=>void;}
 export function Payment({order,methods,busy,submit}:Props){
- const available=paymentMethods(methods,order),first=available.find(m=>m.kind==='cash')||available[0];
+ const available=paymentMethods(methods,order),first=(order.salesChannel==='foodpanda'?available.find(m=>m.kind==='platform'):available.find(m=>m.kind==='cash'))||available[0];
  const [discount,setDiscount]=useState(inputMoney(order.discountCents||0)),[rows,setRows]=useState<PaymentRow[]>([{key:1,methodId:first?.id||'',amount:'',automatic:true}]),[cash,setCash]=useState('');
  const sequence=useRef(1),submitting=useRef(false),amounts=useRef(new Map<number,HTMLInputElement>()),cashInput=useRef<HTMLInputElement>(null),model=paymentModel(order,methods,discount,rows,cash),split=rows.length>1;
  useEffect(()=>{if(!busy)submitting.current=false;},[busy]);

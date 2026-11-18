@@ -1,0 +1,3 @@
+/* ── Closing a native window retains its unsaved work for recovery from the main counter ── */
+import React from 'react';import type {State} from '../model';import {api} from '../helpers';import {notify} from './Notifications';
+export function SavedOrderWindows({workspaces}:{workspaces:State['workspaces']}){if(!workspaces?.length)return null;return <section className="saved-order-windows" aria-label="Saved order windows"><strong>Order windows</strong>{workspaces.map(w=><button className="secondary" key={w.id} onClick={()=>void api('openOrderWindow',{workspaceId:w.id}).catch(e=>notify('error',e.message))}>{w.channel==='takeaway'?'Parcel':w.channel==='foodpanda'?'Foodpanda':'Dine-in'} · Window {w.number} · {w.items} items <span>Open ↗</span></button>)}</section>;}
