@@ -14,7 +14,7 @@ import OrderTable from "@/components/orders/OrderTable";
 
 export default function OrderManagement() {
   /* ────────── workspace state ────────── */
-  const { can } = useAuth();
+  const { user, can } = useAuth();
   const [kind, setKind] = useState("all");
   const { search, setSearch, busy, orders, exportOrders, status, openOrder } =
     useAdminContext();
@@ -30,7 +30,7 @@ export default function OrderManagement() {
           <h3>All orders</h3>
           <p>Order lifecycle and payment records</p>
         </div>
-        <div className="resource-actions">{can("orders:create") && <button type="button" className="primary" onClick={() => openOrder("PARCEL")}>New Parcel</button>}<button className="secondary" onClick={exportOrders}>
+        <div className="resource-actions">{user.role==="cashier" && can("orders:create") && <button type="button" className="primary" onClick={()=>openOrder()}>New order</button>}{can("orders:create") && <button type="button" className="primary" onClick={() => openOrder("PARCEL")}>New Parcel</button>}<button className="secondary" onClick={exportOrders}>
           <Download size={16} /> Export CSV
         </button></div>
       </div>
