@@ -7,6 +7,7 @@ import { useState } from "react";
 import { paidOrder, money } from "@/utils/format";
 import { useAuth } from "@/providers/AuthProvider";
 import { Download } from "lucide-react";
+import Link from "next/link";
 
 import SearchBox from "@/components/ui/SearchBox";
 import DeletedOrderHistory from "./DeletedOrderHistory";
@@ -16,7 +17,7 @@ export default function OrderManagement() {
   /* ────────── workspace state ────────── */
   const { user, can } = useAuth();
   const [kind, setKind] = useState("all");
-  const { search, setSearch, busy, orders, exportOrders, status, openOrder } =
+  const { search, setSearch, busy, orders, exportOrders, status } =
     useAdminContext();
 
   const visible = orders.filter((o) => kind === "all" || (kind === "parcel" ? o.items.some((l) => l.fulfillment === "parcel") : o.items.some((l) => l.fulfillment !== "parcel")));
@@ -30,7 +31,7 @@ export default function OrderManagement() {
           <h3>All orders</h3>
           <p>Order lifecycle and payment records</p>
         </div>
-        <div className="resource-actions">{user.role==="cashier" && can("orders:create") && <button type="button" className="primary" onClick={()=>openOrder()}>New order</button>}{can("orders:create") && <button type="button" className="primary" onClick={() => openOrder("PARCEL")}>New Parcel</button>}<button className="secondary" onClick={exportOrders}>
+        <div className="resource-actions">{user.role==="cashier" && can("orders:create") && <Link href="/orders/new" prefetch={false} className="primary">New order</Link>}{can("orders:create") && <Link href="/orders/new?table=PARCEL" prefetch={false} className="primary">New Parcel</Link>}<button className="secondary" onClick={exportOrders}>
           <Download size={16} /> Export CSV
         </button></div>
       </div>
