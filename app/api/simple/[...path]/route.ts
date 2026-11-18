@@ -2,6 +2,6 @@
 import {NextRequest} from "next/server";
 import {proxy} from "@/lib/server/api";
 export const dynamic="force-dynamic";
-function forward(request:NextRequest,path:string[]){const route=path.join("/");if(!/^(overview|register|command|methods|counters|order-waiters|reports|order-edit-preview|parcel-print-jobs|parcel-print-claim|sales-analysis|daily\/\d{4}-\d{2}-\d{2}|days\/\d{4}-\d{2}-\d{2})$/.test(route))return new Response(null,{status:404});return proxy(request,"/api/simple/"+route+request.nextUrl.search);}
+function forward(request:NextRequest,path:string[]){const route=path.join("/");if(!/^(payment-correction-preview|overview|register|command|methods|counters|order-waiters|reports|order-edit-preview|parcel-print-jobs|parcel-print-claim|sales-analysis|daily\/\d{4}-\d{2}-\d{2}|days\/\d{4}-\d{2}-\d{2})$/.test(route))return new Response(null,{status:404});return proxy(request,"/api/simple/"+route+request.nextUrl.search);}
 export function GET(request:NextRequest,{params}:{params:{path:string[]}}){return forward(request,params.path);}
 export function POST(request:NextRequest,{params}:{params:{path:string[]}}){return forward(request,params.path);}

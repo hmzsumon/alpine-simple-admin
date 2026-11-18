@@ -1,5 +1,6 @@
 /* ── Component: receipt preview and browser printing; never changes payment or order state ── */
 "use client";
+import {paymentMethodBalances} from '@/utils/paymentBalances';
 import {printBill} from "@/lib/billPrinting";
 import LiveDocument from "@/components/ui/LiveDocument";
 import PaperSize, {printDocument} from "@/components/cash/PaperSize";
@@ -45,8 +46,8 @@ export default function PrintableBill({ order, printedBy, previewAt,paper="therm
         {!!order.packingCharge && <p><span>Packing charge</span><span>{amount(order.packingCharge)}</span></p>}
         <p className="bill-grand-total"><strong>Net payable (BDT)</strong><strong>{amount(total(order))}</strong></p>
       </div>
-      {!!order.payments?.length&&<div className="bill-payment">{Array.from(order.payments.reduce((methods,p)=>{for(const a of p.allocations)methods.set(a.name,(methods.get(a.name)||0)+a.cents);return methods;},new Map<string,number>())).map(([name,cents])=><p className="cash-slip-row" key={name}><span>{name}</span><strong>{taka(cents)}</strong></p>)}{order.payments.some(p=>p.tenderedCashCents!==undefined)?<><p className="cash-slip-row"><span>Customer paid (cash)</span><strong>{taka(order.payments.reduce((sum,p)=>sum+(p.tenderedCashCents??p.allocations.filter(a=>a.kind==="cash").reduce((n,a)=>n+a.cents,0)),0))}</strong></p><p className="cash-slip-row"><span>Change returned</span><strong>{taka(order.payments.reduce((sum,p)=>sum+(p.changeCents||0),0))}</strong></p></>:null}</div>}
-      {!!order.payments?.some(p=>p.refund)&&<p className="cash-slip-row"><span>Customer refunded</span><strong>{taka(-(order.payments||[]).filter(p=>p.refund).reduce((s,p)=>s+p.totalCents,0))}</strong></p>}
+      {!!order.payments?.length&&<div className="bill-payment">{paymentMethodBalances(order.payments).map(a=><p className="cash-slip-row" key={a.methodId+"|"+a.kind}><span>{a.name}</span><strong>{taka(a.cents)}</strong></p>)}{!order.payments.some(p=>p.correction&&(p.correction.from.kind==="cash"||p.correction.to.kind==="cash"))&&order.payments.some(p=>p.tenderedCashCents!==undefined)?<><p className="cash-slip-row"><span>Customer paid (cash)</span><strong>{taka(order.payments.reduce((sum,p)=>sum+(p.tenderedCashCents??p.allocations.filter(a=>a.kind==="cash").reduce((n,a)=>n+a.cents,0)),0))}</strong></p><p className="cash-slip-row"><span>Change returned</span><strong>{taka(order.payments.reduce((sum,p)=>sum+(p.changeCents||0),0))}</strong></p></>:null}</div>}
+      {!!order.payments?.some(p=>p.correction)&&<p className="cash-slip-row"><span>Payment method corrected</span></p>}{!!order.payments?.some(p=>p.refund)&&<p className="cash-slip-row"><span>Customer refunded</span><strong>{taka(-(order.payments||[]).filter(p=>p.refund).reduce((s,p)=>s+p.totalCents,0))}</strong></p>}
       </>}
       {printPart!=="bill"&&parcel&&!cancelled&&<section className="parcel-token-slip" aria-label="Customer parcel token">
         <p className="parcel-token-heading">ALPINE · CUSTOMER PARCEL TOKEN</p>
