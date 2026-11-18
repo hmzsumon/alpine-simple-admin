@@ -28,3 +28,6 @@ nav button.active span{background:#1E40AF;color:#FFF}.notification-success .noti
 .order-tabs{display:flex;gap:6px;align-items:center;margin:0 0 14px;padding:5px;background:#E2E8F0;border:1px solid #CBD5E1;border-radius:10px;width:fit-content}.order-tabs button{display:flex;align-items:center;gap:9px;border:0;background:transparent;border-radius:7px;padding:10px 20px;color:#475569;font-weight:600;min-height:40px}.order-tabs button[aria-selected=true]{background:#2563EB;color:#FFF;box-shadow:0 1px 4px #0F172A1A}.order-tabs button span{padding:1px 6px;border-radius:5px;background:#DBEAFE;color:#1D4ED8;font-size:11px}.order-tabs button:focus-visible{outline:2px solid #2563EB;outline-offset:2px}
 
 .order-tabs button[aria-selected=true] span{background:#FFFFFF26;color:#FFF}
+
+/* ── Consistent, centered dropdown chevrons for searchable waiter/table controls ── */
+.search-select-toggle{display:flex;align-items:center;justify-content:center;padding:0;color:#334155}.search-select-toggle svg{display:block;flex-shrink:0;pointer-events:none;transition:transform .15s ease}.search-select-control input[aria-expanded=true]+.search-select-toggle svg{transform:rotate(180deg)}
