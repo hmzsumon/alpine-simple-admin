@@ -19,7 +19,7 @@ The counter uses the requested off-white canvas (#F8FAFC), navy sidebar (#1E293B
 
 The database and Windows-encrypted session are stored under Electron userData in the Windows profile, outside the install folder. Uninstalling does not delete app data. Use Settings → Save local backup regularly. Do not delete app data, move to a new PC or reinstall Windows before syncing and backing up.
 
-Each money command saves its resulting state, exact sequential outbox event and automatic print intent in one SQLite transaction (WAL + FULL). The server atomically applies the same reducer and records the event hash/sequence alongside its counter state. Retries acknowledge the existing event; they do not apply money twice. Menu grants are server-signed; old invoices retain their captured prices. Only the Fish category permits a per-order price override.
+Each money command saves its resulting state, exact sequential outbox event and automatic print intent in one SQLite transaction (WAL + FULL). The server atomically applies the same reducer and records the event hash/sequence alongside its counter state. Retries acknowledge the existing event; they do not apply money twice. Menu grants are server-signed; old invoices retain their captured prices. Fish and the specific Plain Rice Dish permit a per-order price override; half/full plain rice, dal, vegetables and other categories stay fixed. The saved menu default is unchanged.
 
 Petty cash in the sidebar shows opening cash, additions, expenses, current drawer balance and voucher history. Sign out is available at the bottom of the sidebar and in Settings; pending transactions must be synced first.
 

@@ -4,7 +4,7 @@ import type {Order,MenuItem} from '../types/workspace';
 import type {AuthUser} from '../types/auth';
 import {ApiError} from './ApiError';
 import {isRecord} from './authValidation';
-import {isFishCategory} from './fishPricing';
+import {canSetOrderPrice} from './orderPricing';
 import {billCents,cents,grossBillCents,paidCents,text} from './simpleCash';
 export const orderFingerprint=(order:Order)=>createHash('sha256').update(JSON.stringify(order)).digest('hex');
 export function adjustOrder(original:Order,input:Record<string,unknown>,menu:MenuItem[],actor:AuthUser,at:string,cancel=false,ids?:{adjustment:string;refund:string}):Order{
@@ -20,11 +20,11 @@ export function adjustOrder(original:Order,input:Record<string,unknown>,menu:Men
    let old:Order['items'][number]|undefined;
    if(value.lineIndex!==undefined){if(!Number.isInteger(value.lineIndex)||seen.has(Number(value.lineIndex)))throw new ApiError(400,'Invalid original item reference.');seen.add(Number(value.lineIndex));old=original.items[Number(value.lineIndex)];if(!old||old.menuId!==value.menuId)throw new ApiError(409,'Original item changed.');}
    const item=menu.find(m=>m.id===value.menuId);
-   if(!old&&(!item?.active||(item.price===null&&!isFishCategory(item.category))))throw new ApiError(409,'Selected item is unavailable.');
-   const fish=isFishCategory(old?.category||item?.category||'');
-   if(value.unitPrice!==undefined&&!fish)throw new ApiError(403,'Only Fish prices can be overridden.');
+   if(!old&&(!item?.active||(item.price===null&&!canSetOrderPrice(item))))throw new ApiError(409,'Selected item is unavailable.');
+   const adjustable=canSetOrderPrice({category:old?.category||item?.category,name:old?.name||item?.name,nameBn:old?.nameBn||item?.nameBn});
+   if(value.unitPrice!==undefined&&!adjustable)throw new ApiError(403,'Only Fish and Plain Rice Dish prices can be overridden.');
    const price=value.unitPrice!==undefined?cents(value.unitPrice,false)/100:old?.price??item?.price;
-   if(price===null||price===undefined)throw new ApiError(400,'Enter the Fish price.');cents(price);
+   if(price===null||price===undefined)throw new ApiError(400,'Enter this item’s price.');cents(price);
    return {...(old||{menuId:item!.id,name:item!.name,nameBn:item!.nameBn,station:item!.station,category:item!.category,fulfillment:original.orderType==="takeaway"?"parcel" as const:"dine_in" as const}),quantity:Number(value.quantity),price,...(value.unitPrice!==undefined?{unitPrice:price,priceSetBy:actor.id,priceSetByName:actor.name}:{})};
   });
   order.discountCents=input.discount===undefined?original.discountCents||0:cents(input.discount);

@@ -6,6 +6,7 @@ import SearchableSelect from "@/components/ui/SearchableSelect";
 
 /* ────────── imports ────────── */
 import { useState } from "react";
+import Link from "next/link";
 import MenuImportPanel from "./MenuImportPanel";
 import { useAuth } from "@/providers/AuthProvider";
 import { useAdminContext } from "@/context/AdminContext";
@@ -44,6 +45,7 @@ export default function MenuManagement() {
           <p>Price, Code and Bengali names in the menu</p>
         </div>
         <div className="menu-actions">
+        <Link href="/menu-code-print" target="_blank" className="secondary">Print item codes</Link>
         {can("menu:manage") && <button type="button" className="secondary" disabled={busy || showImport || mode !== "database"} onClick={() => setShowImport(true)}><FileSpreadsheet size={16}/>Excel Import / Update</button>}
         <button className="secondary" disabled={!can("menu:manage")}
           onClick={() => setModal("category")}>

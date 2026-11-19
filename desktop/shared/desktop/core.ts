@@ -7,7 +7,7 @@ import {billCents,cents,dueCents,grossBillCents,paidCents,paymentAllocations,can
 import {adjustOrder} from '../utils/orderAdjustment';
 import {correctPaymentMethod} from '../utils/paymentCorrection';
 import {isRecord} from '../utils/authValidation';
-import {isFishCategory} from '../utils/fishPricing';
+import {canSetOrderPrice} from '../utils/orderPricing';
 export const canonical=(value:unknown):string=>Array.isArray(value)?'['+value.map(canonical).join(',')+']':isRecord(value)?'{'+Object.keys(value).filter(k=>value[k]!==undefined&&k!=='_id').sort().map(k=>JSON.stringify(k)+':'+canonical(value[k])).join(',')+'}':JSON.stringify(value)??'null';
 export const fingerprint=(value:unknown)=>createHash('sha256').update(canonical(value)).digest('hex');
 // Printer acknowledgements must not make an otherwise unchanged bill stale.
@@ -34,8 +34,8 @@ export function applyCommand(original:Snapshot,event:DesktopCommand):Snapshot {
    const items:Order['items']=body.items.map(v=>{
     if(!isRecord(v)||!Number.isInteger(v.quantity)||Number(v.quantity)<1||Number(v.quantity)>99)throw new ApiError(400,'Enter quantities from 1 to 99.');
     const item=c.menu.find(m=>m.id===v.menuId&&m.active);if(!item)throw new ApiError(409,'Selected item is unavailable.');
-    if(v.unitPrice!==undefined&&!isFishCategory(item.category))throw new ApiError(403,'Only Fish prices can be overridden.');
-    const price=v.unitPrice!==undefined?cents(v.unitPrice,false)/100:item.price;if(price===null)throw new ApiError(400,'Enter the Fish price for this order.');cents(price);
+    if(v.unitPrice!==undefined&&!canSetOrderPrice(item))throw new ApiError(403,'Only Fish and Plain Rice Dish prices can be overridden.');
+    const price=v.unitPrice!==undefined?cents(v.unitPrice,false)/100:item.price;if(price===null)throw new ApiError(400,'Enter this item’s price for this order.');cents(price);
     return {menuId:item.id,name:item.name,nameBn:item.nameBn,category:item.category,station:item.station,quantity:Number(v.quantity),price,fulfillment:channel==='dine_in'?'dine_in':'parcel',...(v.unitPrice!==undefined?{unitPrice:price,priceSetBy:user.id,priceSetByName:user.name}:{})};
    });
    const packing=cents(body.packingCharge||0);if(packing>1000000)throw new ApiError(400,'Packing charge is too high.');
