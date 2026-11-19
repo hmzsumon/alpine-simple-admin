@@ -1,3 +1,4 @@
+import {orderPrintTime} from '../../../utils/orderPrintTime';
 import {isTeaItem} from '../../../utils/parcelPrinting';
 /* ── Native 80mm receipt: text and cutter commands, independent of Chromium page rendering ── */
 import type {PrintPart} from './printTypes';
@@ -8,7 +9,7 @@ export function wrapText(value:unknown,width=COLUMNS){const text=printText(value
 const amount=(cents:number)=>(cents/100).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});
 export function receiptLines(order:Order,part:PrintPart):string[]{
  if(part==='token')return ['ALPINE - CUSTOMER PARCEL TOKEN',printText(order.parcelToken),printText(order.simpleBillNo),...wrapText(order.simpleCounterName),'Total (BDT): '+amount(billCents(order))];
- if(part==='kitchen'){const lines=[...wrapText('KITCHEN TEA - '+(order.parcelToken||order.simpleBillNo||order.id),23),'ITEM'.padEnd(19)+'QTY'.padStart(4)];for(const [index,item] of order.items.filter(isTeaItem).entries()){const names=wrapText((index+1)+'. '+item.name,19);lines.push(names[0].padEnd(19)+String(item.quantity).padStart(4),...names.slice(1));if(item.note)lines.push(...wrapText('Note: '+item.note,23));}return lines;}
+ if(part==='kitchen'){const lines=[...wrapText('KITCHEN TEA - '+(order.parcelToken||order.simpleBillNo||order.id),23),orderPrintTime(order.createdAt),'ITEM'.padEnd(19)+'QTY'.padStart(4)];for(const [index,item] of order.items.filter(isTeaItem).entries()){const names=wrapText((index+1)+'. '+item.name,19);lines.push(names[0].padEnd(19)+String(item.quantity).padStart(4),...names.slice(1));if(item.note)lines.push(...wrapText('Note: '+item.note,23));}return lines;}
 
  const lines:string[]=[];const row=(label:string,value:string)=>{const left=printText(label),right=printText(value);if(left.length+right.length+1>COLUMNS){lines.push(...wrapText(left));lines.push(right.padStart(COLUMNS));}else lines.push(left+' '.repeat(COLUMNS-left.length-right.length)+right);};
  lines.push('Alpine Restaurant','Chowhatta, Sylhet-3100','Mobile: 01715-19 55 50');if(order.id==='PRINTER-TEST')lines.push('TEST PRINT - NOT A SALE');
