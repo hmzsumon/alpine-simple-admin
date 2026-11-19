@@ -13,3 +13,15 @@
 .payment-change-total { @apply mt-3 flex items-center justify-between gap-3 border-t border-emerald-400/15 pt-3 text-sm text-emerald-300; }
 .payment-change-total strong { @apply whitespace-nowrap text-xl tabular-nums; }
 .payment-change-total.payment-change-short { @apply text-rose-300; }
+
+/* ── Shared counter setup ── */
+.counter-combine { scroll-margin-top: 80px; }
+.counter-combine fieldset { @apply m-0 min-w-0 border-0 p-0; }
+.counter-combine-heading { @apply mb-4 flex flex-wrap items-start justify-between gap-3; }
+.counter-combine-heading h2 { @apply text-base font-semibold; }
+.counter-combine-heading p,.counter-combine-help { @apply mt-2 text-xs leading-6 text-slate-400; }
+.counter-combine-preview { @apply my-4 rounded-xl border border-emerald-400/25 bg-emerald-500/10 p-4; }
+.counter-combine-preview strong { @apply text-sm text-emerald-300; }
+.counter-combine-preview p { @apply my-2 text-sm; }
+.counter-combine-preview small { @apply block text-xs leading-6 text-slate-400; }
+.counter-combine-help { @apply mb-4; }

@@ -1,0 +1,12 @@
+/* ── Render Arial at thermal dot density, then spool graphics without a print dialog ── */
+import {BrowserWindow,type NativeImage} from 'electron';
+import type {Order} from '../../shared/types/workspace';
+import type {PrintPart} from './printTypes';
+import {receipt} from './receipt';
+import {rasterReceipt,THERMAL_WIDTH,MAX_RASTER_HEIGHT} from './raster';
+export async function receiptImage(order:Order,part:PrintPart):Promise<NativeImage>{
+ const zoom=203.2/96,win=new BrowserWindow({show:false,width:THERMAL_WIDTH,height:600,useContentSize:true,backgroundColor:'#ffffff',webPreferences:{nodeIntegration:false,contextIsolation:true,sandbox:true,offscreen:true,backgroundThrottling:false}});
+ win.webContents.setWindowOpenHandler(()=>({action:'deny'}));let timer:ReturnType<typeof setTimeout>|undefined,phase='load';
+ try{return await Promise.race([(async()=>{await win.loadURL('data:text/html;charset=utf-8,'+encodeURIComponent(receipt(order,part)));await win.webContents.executeJavaScript("document.body.style.zoom='"+zoom+"'");phase='measure';const size=await win.webContents.executeJavaScript('({height:document.body.getBoundingClientRect().height,width:document.documentElement.scrollWidth,available:innerWidth})') as {height:number;width:number;available:number};const height=Math.ceil(size.height)+2;if(!Number.isFinite(height)||height<1||height>MAX_RASTER_HEIGHT||size.width>size.available+1)throw Error('Receipt does not fit the thermal paper. No print was sent.');phase='resize '+height;win.setContentSize(THERMAL_WIDTH,Math.max(600,height));await win.webContents.executeJavaScript('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');win.webContents.invalidate();await new Promise(resolve=>setTimeout(resolve,60));phase='capture '+height;const image=await win.webContents.capturePage({x:0,y:0,width:THERMAL_WIDTH,height});if(image.isEmpty())throw Error('Receipt image was empty. No print was sent.');return image.resize({width:THERMAL_WIDTH,height,quality:'best'});})(),new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(Error('Receipt rendering timed out. No print was sent.')),15000);})]);}catch(e){throw Error('Receipt '+phase+': '+(e instanceof Error?e.message:String(e)));}finally{if(timer)clearTimeout(timer);if(!win.isDestroyed())win.destroy();}
+}
+export async function renderedReceipt(order:Order,part:PrintPart){const image=await receiptImage(order,part),{width,height}=image.getSize();return rasterReceipt(image.toBitmap({scaleFactor:1}),width,height);}

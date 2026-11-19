@@ -6,3 +6,14 @@ test('long names and large amounts wrap without losing digits; discount appears 
 test('a parcel token is its own compact document and user text cannot inject print or cutter commands',()=>{const value=order();value.items[0].name='Soup\x1b@bad\n\x1dV0';const bill=rawReceipt(value,'bill'),token=rawReceipt(value,'token');assert.equal(occurrences(bill,Buffer.from([27,64])),1);assert.equal(occurrences(bill,Buffer.from([29,86])),1);assert.ok(token.includes(Buffer.from('P-1234-00001')));assert.equal(token.includes(Buffer.from('Paratha')),false);assert.ok(receiptLines(value,'token').length<=6);assert.equal(printText('Caf\u00e9 - \u09e8\u09eb.\u09e6\u09e6'),'Cafe - 25.00');});
 test('the packaged Windows helper validates real receipt bytes without opening a printer',()=>{const folder=fs.mkdtempSync(path.join(os.tmpdir(),'alpine-spool-test-')),file=path.join(folder,'receipt.bin');fs.writeFileSync(file,rawReceipt(order(),'bill'));const helper=path.resolve(__dirname,'../dist/raw-print.exe');assert.deepEqual(JSON.parse(execFileSync(helper,['--validate',file],{encoding:'utf8',windowsHide:true})),{valid:true,bytes:fs.statSync(file).size});assert.ok(rawExecutable('C:\\app\\resources\\app.asar\\dist').includes('app.asar.unpacked'));});
 test('a failed native helper retains uncertainty and never retries or leaves the transient payload behind',async()=>{const folder=fs.mkdtempSync(path.join(os.tmpdir(),'alpine-spool-failure-'));await assert.rejects(spoolRaw(rawReceipt(order(),'bill'),'QA nonexistent printer','Test only',folder,path.join(folder,'missing.exe')),/ENOENT/);assert.deepEqual(fs.readdirSync(folder),[]);});
+
+test('clean-font raster bands keep exact pixels, bounded width and one final cut',()=>{
+ const {rasterReceipt}=require('../dist/raster.cjs'),width=16,height=129,image=Buffer.alloc(width*height*4,255);
+ for(const p of [0,128*width+15])for(let c=0;c<3;c++)image[p*4+c]=0;
+ const bytes=rasterReceipt(image,width,height),first=13,second=first+8+2*128;
+ assert.deepEqual([...bytes.subarray(first,first+8)],[29,118,48,0,2,0,128,0]);assert.equal(bytes[first+8],128);
+ assert.deepEqual([...bytes.subarray(second,second+8)],[29,118,48,0,2,0,1,0]);assert.deepEqual([...bytes.subarray(second+8,second+10)],[0,1]);assert.deepEqual([...bytes.subarray(-4)],[29,86,65,0]);assert.equal(bytes.length,13+16+2*129+4);
+});
+test('blank, transparent and oversized receipt images are rejected before reaching the printer',()=>{
+ const {rasterReceipt}=require('../dist/raster.cjs');assert.throws(()=>rasterReceipt(Buffer.alloc(16*4,255),8,2),/blank/);assert.throws(()=>rasterReceipt(Buffer.alloc(16*4),8,2),/blank/);assert.throws(()=>rasterReceipt(Buffer.alloc(4),577,1),/dimensions/);assert.throws(()=>rasterReceipt(Buffer.alloc(4),1,16001),/dimensions/);assert.throws(()=>rasterReceipt(Buffer.alloc(3),1,1),/dimensions/);
+});
