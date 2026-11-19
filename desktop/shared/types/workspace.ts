@@ -18,7 +18,7 @@ export type MenuItem = {
   active: boolean;
   note?: string;
 };
-export type Order = { handoffPrintId?:string;finalizedAt?:string;handoffPrintClaim?:{by:string;at:string;deviceId:string};adjustments?:{id:string;at:string;by:string;byName:string;reason:string;cancel:boolean;refundedCents:number;before:{items:Order["items"];discountCents:number;status:string};after:{items:Order["items"];discountCents:number;totalCents:number}}[]; bookingState?:"booking"|"final";bookingRevision?:number;
+export type Order = { note?:string; handoffPrintId?:string;finalizedAt?:string;handoffPrintClaim?:{by:string;at:string;deviceId:string};adjustments?:{id:string;at:string;by:string;byName:string;reason:string;cancel:boolean;refundedCents:number;before:{items:Order["items"];discountCents:number;status:string};after:{items:Order["items"];discountCents:number;totalCents:number}}[]; bookingState?:"booking"|"final";bookingRevision?:number;
   floorName?:string; hallId?:string; hallName?:string;tableName?:string;
   simpleDayId?:string;simpleCounterId?:string;simpleCounterName?:string; salesChannel?:"dine_in"|"takeaway"|"foodpanda";externalOrderId?:string;simpleBillNo?:string;payments?:import("./simpleCash").BillPayment[];
   orderType?: "dine_in" | "takeaway";
