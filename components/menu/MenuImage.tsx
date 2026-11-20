@@ -9,7 +9,7 @@ export default function MenuImage({ src, name, className = "menu-image" }: {
   const [failed, setFailed] = useState<string>();
   const image = src && failed !== src ? src : DEFAULT_MENU_IMAGE;
   // A broken or unreachable photo falls back to the bundled restaurant artwork.
-  return <img src={image} alt={src && failed !== src ? name : "Alpine Restaurant"}
+  return <img src={image.startsWith('http') ? '/api/menu-photo?src='+encodeURIComponent(image) : image} alt={src && failed !== src ? name : "Alpine Restaurant"}
     className={className} width={80} height={60} loading="lazy"
     onError={() => { if (image !== DEFAULT_MENU_IMAGE) setFailed(src); }} />;
 }

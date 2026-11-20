@@ -1,0 +1,13 @@
+{
+  "name":"alpine-local-server","version":"1.0.0","private":true,
+  "description":"Central MongoDB LAN server for the existing Alpine apps",
+  "author":"Alpine Restaurant","main":"dist/main.cjs",
+  "scripts":{"build":"node scripts/build.cjs","dist":"node scripts/package.cjs","start":"../desktop/node_modules/.bin/electron .","test:network":"node tests/network.cjs","test:integration":"node tests/integration.cjs --manager"},
+  "build":{
+    "appId":"com.alpine.simple.localserver","productName":"Alpine Local Server","asar":true,
+    "directories":{"output":"release"},"files":["dist/**/*","package.json"],
+    "extraResources":[{"from":"runtime/api","to":"api"},{"from":"runtime/admin","to":"admin"},{"from":"runtime/api/node_modules","to":"api/node_modules","filter":["**/*"]},{"from":"runtime/admin/node_modules","to":"admin/node_modules","filter":["**/*"]}],
+    "win":{"target":[{"target":"nsis","arch":["x64"]}],"artifactName":"Alpine-Local-Server-${version}-Windows-x64.${ext}","icon":"../public/alpine-brand.png"},
+    "nsis":{"oneClick":false,"perMachine":false,"allowToChangeInstallationDirectory":true,"deleteAppDataOnUninstall":false,"createDesktopShortcut":true,"shortcutName":"Alpine Local Server"}
+  }
+}
