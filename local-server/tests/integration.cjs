@@ -91,7 +91,7 @@ async function main(){
     const code=await new Promise(r=>counter.once('exit',r));assert.equal(code,0,'Existing counter LAN test failed');
     const check=await manager.connection();const localWorkspace=await check.db(manager.config.dbName).collection('admin_workspace').findOne({_id:'main'});assert(localWorkspace.state.orders.length>=2);await check.close();
     const presence=await until(async()=>{const list=await manager.devices();return list.devices.some(d=>d.kind==='counter')&&list.devices.some(d=>d.kind==='waiter')?list:null;},'Connected device presence');assert(presence.devices.every(d=>!('sessionHash' in d)));assert(presence.devices.some(d=>d.userName===cashier.name&&d.active));
-    fs.writeFileSync(path.join(proof,'manager-integration.json'),JSON.stringify({ok:true,resumableOwnerSetup:true,privateAuthenticatedMongo:true,originalAdminLogin:true,httpOnlyLocalCookie:true,adminMenuPage:true,encryptedBackupDecrypts:true,restartStartsApiAndAdmin:true,currentCounterLanFlow:true,realCloudUntouched:true,physicalPrints:0}));console.log('Manager, Admin, encrypted backup, restart and existing Counter checks passed.');
+    fs.writeFileSync(path.join(proof,'manager-integration.json'),JSON.stringify({ok:true,packagedRuntime:!!process.env.QA_PACKAGED_RUNTIME,resumableOwnerSetup:true,privateAuthenticatedMongo:true,originalAdminLogin:true,httpOnlyLocalCookie:true,adminMenuPage:true,encryptedBackupDecrypts:true,restartStartsApiAndAdmin:true,currentCounterLanFlow:true,connectedDevicePresence:true,realCloudUntouched:true,physicalPrints:0}));console.log('Manager, Admin, encrypted backup, restart and existing Counter checks passed.');
    }finally{await manager.stop();}
   }
  }finally{
