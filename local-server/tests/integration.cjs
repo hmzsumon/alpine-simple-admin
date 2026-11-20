@@ -79,6 +79,7 @@ async function main(){
    const options={root:managerRoot,runtime,nodeExe:path.join(admin,'desktop/node_modules/electron/dist/electron.exe'),safeStorage,progress:text=>console.log('Manager: '+text)};let manager=new Controller(options);
    manager.config=manager.fresh();Object.assign(manager.config,{port:4263,adminPort:4264,mongoPort:27182});manager.save();
    try{
+    await manager.prepare();assert.equal((await cdb.collection('hub_cloud').findOne({_id:'main'})).phase,'inactive');
     await manager.setup({cloud:cloudUrl,identifier:owner.email,password:ownerPassword,label:'Manager isolated QA'});
     assert.equal((await manager.status()).phase,'active');
     assert(!fs.readFileSync(manager.file).includes(Buffer.from(manager.config.mongoPassword)));
