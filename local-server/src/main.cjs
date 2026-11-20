@@ -15,6 +15,7 @@ app.whenReady().then(async()=>{
  handler('server:status',async()=>({...await controller.status(),message:statusText,autoStart:app.getLoginItemSettings().openAtLogin}));
  handler('server:devices',()=>controller.devices());
  handler('server:network',()=>adapters());handler('server:scan-network',index=>scanNetwork(index));handler('server:network-settings',()=>shell.openExternal('ms-settings:network-status'));
+ handler('server:prepare',()=>controller.prepare());
  handler('server:setup',async input=>{if(!input||typeof input.password!=='string'||input.password.length>128||!input.confirmReleased)throw Error('Confirm that all counters have synced and signed out.');const result=await controller.setup(input);app.setLoginItemSettings({openAtLogin:input.autoStart!==false});return result;});
  handler('server:resume',()=>controller.setup({}));handler('server:cancel',()=>controller.cancel());
  handler('server:open-admin',async()=>{const status=await controller.status();if(status.phase!=='active')throw Error('Finish setup first.');await shell.openExternal(status.admin);});

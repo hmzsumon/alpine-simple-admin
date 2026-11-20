@@ -13,3 +13,4 @@ for(const [id,name]of [['resume-button','resume'],['cancel-button','cancel'],['a
 $('backup').addEventListener('click',async()=>{await action('backup',$('backup-password').value);$('backup-password').value='';});setInterval(refresh,1500);refresh();
 setInterval(async()=>{try{const status=await call('status');$('devices-section').hidden=status.phase!=='active';if(status.phase==='active')await devices();}catch{}},3000);
 $('network-refresh').addEventListener('click',network);$('network-adapter').addEventListener('change',networkSummary);$('network-scan').addEventListener('click',scan);$('network-settings').addEventListener('click',()=>action('network-settings'));network();
+$('prepare').addEventListener('click',()=>action('prepare'));

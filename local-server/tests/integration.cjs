@@ -75,6 +75,7 @@ async function main(){
    process.env.ALPINE_SERVER_QA='1';const {Controller}=require(path.join(admin,'local-server/src/controller.cjs'));
    const protectedKey=crypto.randomBytes(32),safeStorage={isEncryptionAvailable:()=>true,encryptString:value=>Buffer.from(JSON.stringify(cryptoTools.seal(value,protectedKey,'qa-storage'))),decryptString:value=>cryptoTools.open(JSON.parse(value),protectedKey,'qa-storage')};
    const managerRoot=fs.mkdtempSync(path.join(root,'manager-qa-')),runtime=process.env.QA_PACKAGED_RUNTIME||path.join(admin,'local-server/runtime');
+   if(process.env.ALPINE_QA_ENGINE_CACHE)fs.cpSync(path.join(process.env.ALPINE_QA_ENGINE_CACHE,'mongo-engine'),path.join(managerRoot,'mongo-engine'),{recursive:true});
    const options={root:managerRoot,runtime,nodeExe:path.join(admin,'desktop/node_modules/electron/dist/electron.exe'),safeStorage,progress:text=>console.log('Manager: '+text)};let manager=new Controller(options);
    manager.config=manager.fresh();Object.assign(manager.config,{port:4263,adminPort:4264,mongoPort:27182});manager.save();
    try{

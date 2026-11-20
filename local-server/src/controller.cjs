@@ -2,7 +2,7 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),os=require('node:os'),net=require('node:net'),{spawn}=require('node:child_process'),{createRequire}=require('node:module');
 const {MongoEngine}=require('./engine.cjs');const wait=ms=>new Promise(r=>setTimeout(r,ms));
 const secret=()=>crypto.randomBytes(48).toString('base64url');
-function addresses(port){return Object.values(os.networkInterfaces()).flat().filter(n=>n&&n.family==='IPv4'&&!n.internal&&(/^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(n.address))).map(n=>'http://'+n.address+':'+port);}
+function addresses(port){const entries=Object.entries(os.networkInterfaces()).flatMap(([name,items])=>(items||[]).map(item=>({...item,name}))).filter(n=>n.family==='IPv4'&&!n.internal&&(/^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(n.address)));const physical=entries.filter(n=>!/vEthernet|VMware|VirtualBox|WSL|docker|Tailscale|WireGuard|OpenVPN|vbox/i.test(n.name));return (physical.length?physical:entries).map(n=>'http://'+n.address+':'+port);}
 async function freePort(port){await new Promise((resolve,reject)=>{const server=net.createServer();server.once('error',()=>reject(Error('Port '+port+' is already in use. Stop the other server first.')));server.listen(port,'127.0.0.1',()=>server.close(resolve));});}
 class Controller{
  constructor({root,runtime,nodeExe,safeStorage,progress=()=>{}}){
@@ -17,6 +17,7 @@ class Controller{
  cloudOrigin(value){const url=new URL(value);if(url.username||url.password||url.pathname!=='/'||url.search||url.hash||!(url.protocol==='https:'||(process.env.ALPINE_SERVER_QA==='1'&&url.hostname==='127.0.0.1'&&url.protocol==='http:')))throw Error('Use the HTTPS restaurant API address.');return url.origin;}
  async call(pathname,token,body){const r=await fetch(this.config.cloud+'/api/'+pathname,{method:body===undefined?'GET':'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(120000)});const value=await r.json();if(!r.ok)throw Error(value.error||'The cloud request could not be completed.');return value;}
  async mongo(){if(!this.engine){await freePort(this.config.mongoPort);this.engine=new MongoEngine(this.root,this.config,this.MongoClient,this.progress);}await this.engine.start();}
+ async prepare(){if(this.busy)throw Error('Server setup is already running.');this.busy=true;try{if(!this.config){this.config=this.fresh();this.save();}await this.mongo();this.progress('Server engine ready. Now sync/sign out of the counters before Owner setup.');return true;}finally{this.busy=false;}}
  async setup(input){
   if(this.busy)throw Error('Server setup is already running.');this.busy=true;
   try{
