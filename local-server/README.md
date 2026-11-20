@@ -1,51 +1,36 @@
-# Alpine Local Server · Windows
+# Alpine Local Server 1.1.0 · SQLite test build
 
-বর্তমান Counter, native Android Waiter ও Admin-এর কাজের নিয়ম রেখে একটি রেস্তোরাঁর PC-কে কেন্দ্রীয় সার্ভার করা হয়। নতুন KOT/ইনভেন্টরি ফিচার চালু করা হয়নি।
+বর্তমান Windows Counter, Android Waiter এবং Admin রেখেই একটি PC-তে লোকাল সার্ভার চলে। নতুন KOT বা অন্য কাজের নিয়ম যোগ করা হয়নি। এই সংস্করণে নতুন সেটআপে SQLite ব্যবহৃত হয়; MongoDB ইনস্টল বা engine download লাগে না। Cloud আগের MongoDB-তেই থাকে।
 
-## রেস্তোরাঁয় বসানো
+## প্রথম পরীক্ষা
 
-1. সার্ভারের জন্য নির্দিষ্ট Windows 11 x64 PC ব্যবহার করুন। সেটআপের সময় ইন্টারনেট, পর্যাপ্ত খালি জায়গা এবং Windows Private network প্রয়োজন। MongoDB অন্য কাউন্টার PC বা ফোনে লাগবে না। মূল PC-তে MongoDB 8.0.38 বা নতুন 8.0 patch থাকলে তার engine ব্যবহার হবে; না থাকলে অফিসিয়াল 8.0.38 ZIP checksum মিলিয়ে ব্যক্তিগত engine ডাউনলোড হবে। বিদ্যমান MongoDB service/data পরিবর্তন করা হয় না।
-2. সার্ভার ইনস্টলার চালিয়ে `Alpine Local Server` খুলুন। `প্রথমে server engine প্রস্তুত করুন` চাপুন। প্রথমবার engine download বড় হতে পারে; progress দেখাবে এবং এই সময়ে আগের অ্যাপে কাজ চলতে পারে। প্রস্তুত হলে প্রত্যেক কাউন্টারের Sync শেষ করে Sign out করুন। ওয়েটারদের অপেক্ষমাণ অর্ডারও পাঠিয়ে দিন। তারপর Owner-এর বর্তমান mobile/email ও password দিন এবং released-counter checkbox টিক দিয়ে সেটআপ করুন। সাধারণ staff/Admin অ্যাকাউন্ট দিয়ে handoff করা যায় না।
-3. সফটওয়্যার ব্যাকআপ তৈরি করে মেনু, কর্মী, পারমিশন, হল/টেবিল ও হিসাব লোকালে আনবে। অসম্পূর্ণ import আবার শুরু করা যায়; পুরোনো ব্যবসার রেকর্ড overwrite করা হয় না। প্রস্তুতির সময় নতুন cloud কাজ সাময়িক বন্ধ থাকে। অসম্পূর্ণ handoff ১৫ মিনিটে মেয়াদ শেষ হলে cloud-এর আগের ব্যবস্থা চালু থাকে; manager থেকে cancel করে আবার শুরু করুন। সক্রিয় সার্ভারকে ইচ্ছেমতো অন্য PC-তে পুনরায় handoff করা যাবে না।
-4. সার্ভারে দেখানো LAN ঠিকানাটি নিন, যেমন `http://192.168.1.50:4250`। router-এ এই PC-র জন্য DHCP reservation দিন। `Private LAN-এ সংযোগ দিন` চাপলে শুধু Private network ও LocalSubnet-এর API port খোলার জন্য Windows অনুমতি চাইবে। MongoDB-র port LAN-এ খোলা হয় না।
-5. বর্তমান Windows Counter-এর login screen-এ `Restaurant server` এবং Android Waiter-এর `রেস্টুরেন্ট সার্ভার সেটিংস`-এ এই ঠিকানা দিন। বর্তমান কর্মী অ্যাকাউন্টেই লগইন হবে। এই কেন্দ্রীয় সার্ভারের জন্য পুরোনো ৬ সংখ্যার Wi-Fi pairing প্রয়োজন নেই।
-6. প্রতিটি কাউন্টার PC-তে তার নিজের USB printer নির্বাচন করুন। প্রথমে একটি পরীক্ষার অর্ডার ও বিল যাচাই করুন। বিদ্যমান bill/token/tea kitchen-copy এবং Foodpanda-র প্রিন্টের নিয়ম অপরিবর্তিত।
-7. সার্ভারের `Admin খুলুন` দিয়ে মূল PC-তেই বর্তমান Admin ব্যবহার করা যায়। ইন্টারনেট ছাড়া লোকাল login/order/payment/report কাজ করে। Internet ফিরলে সিঙ্ক নিজে থেকে চলে। অনলাইন Admin দিয়ে দূর থেকে পরিবর্তন করতে মূল PC চালু ও online থাকতে হবে; PC offline থাকলে cloud-এ শেষ সিঙ্কের রিপোর্ট দেখা যায়, নতুন পরিবর্তন গ্রহণ করা হয় না।
+1. লক্ষ্য PC: Windows 10 x64, Pentium G3260, 4 GB RAM। SSD-তে ইনস্টল করুন। এই নির্দিষ্ট পুরোনো PC-তে installer ও server engine চালিয়ে বাস্তব পরীক্ষা বাকি; development-এর পরীক্ষা অন্য PC-তে হয়েছে।
+2. Installer বসিয়ে Alpine Local Server খুলুন। প্রথমে **server engine প্রস্তুত করুন** চাপুন। এটি ইন্টারনেট ছাড়াই SQLite তৈরি ও integrity check করবে।
+3. পুরোনো laptop server এখনো active থাকলে এই ধাপেই থামুন। একসঙ্গে দুইটি মূল সার্ভার চালু করা যাবে না। এই পরীক্ষার পুরোনো লোকাল হিসাব স্থানান্তরের প্রয়োজন নেই; পুরোনো cloud enrollment সরিয়ে নতুন PC সক্রিয় করার কাজ আলাদা।
+4. নতুন মূল সার্ভার চালুর সময় সব Counter-এর Sync শেষ করে Sign out করুন এবং Waiter-এর অপেক্ষমাণ অর্ডার পাঠান। প্রথম Owner setup-এ ইন্টারনেট লাগবে। Owner-এর বর্তমান mobile/email ও password দিয়ে সেটআপ করুন। Staff/Admin দিয়ে server enrollment করা যাবে না।
+5. দেখানো ঠিকানা, যেমন `http://192.168.1.100:4250`, Counter-এর **Restaurant server** এবং Waiter-এর **রেস্টুরেন্ট সার্ভার সেটিংস**-এ দিন। IP-টি সার্ভার PC-এর বর্তমান LAN/Wi-Fi IP হতে হবে। অন্য PC বা ফোনে database বসাতে হবে না।
+6. প্রতিটি Counter-এ তার নিজের USB printer নির্বাচন করে Print test slip চালান। তারপর ফোন থেকে একটি পরীক্ষার অর্ডার, bill print ও payment যাচাই করুন। Physical printer এই সফটওয়্যার পরীক্ষায় ব্যবহার করা হয়নি।
 
-## সংযুক্ত PC ও ফোন
+## ইন্টারনেট ও নেটওয়ার্ক
 
-সার্ভার ম্যানেজারের তালিকায় এই API-তে যুক্ত অ্যাপ, কর্মী, IP, কাউন্টার ও last seen দেখা যায়। গত ৯০ সেকেন্ডে authenticated request হলে সক্রিয় দেখায়। এটি Wi-Fi router-এর সব ডিভাইস scan করে না এবং remote cloud Admin-কে LAN device হিসেবে দেখায় না। Session token তালিকায় প্রকাশ হয় না।
+প্রথম setup-এর পর একই LAN/Wi-Fi-তে স্থানীয় login, order, bill/payment এবং report চলে। Internet গেলে LAN/Wi-Fi চালু রাখতে হবে। Internet ফিরলে সংরক্ষিত পরিবর্তন cloud-এ যায়। দূর থেকে Admin-এর নতুন কাজের জন্য মূল সার্ভার PC online থাকতে হবে; offline cloud report-এ শেষ সিঙ্কের তথ্য থাকে।
 
-## LAN কেবল লাগিয়ে নেটওয়ার্ক পরীক্ষা
+Server PC-এর IP স্থায়ী রাখুন। LAN ও Wi-Fi আলাদা subnet হলে অ্যাপে সেই ডিভাইস থেকে পৌঁছানো যায় এমন server IP দিন। অন্য PC-এর Chrome-এ `http://SERVER-IP:4250/health` খুলে `status: ok` দিয়ে আগে যোগাযোগ যাচাই করুন।
 
-সেটআপ বা Owner login করার আগেই `LAN / নেটওয়ার্ক পরীক্ষা` ব্যবহার করা যায়। রেস্তোরাঁর LAN কেবল লাগান, `সংযোগ দেখুন` চাপুন এবং আসল Ethernet adapter বেছে নিন। Wi-Fi দিয়ে পরীক্ষা করতে চাইলে Wi-Fi বেছে নিন। এরপর `নেটওয়ার্ক পরীক্ষা করুন` চাপুন।
+LAN scan-এ PC, ফোন, router বা printer দেখা যেতে পারে; ARP-এর সংখ্যা মোট PC-র নিশ্চিত সংখ্যা নয়। **সংযুক্ত PC ও ফোন** তালিকায় এই server-এ app ব্যবহার করা কর্মী, IP, counter ও last seen দেখায়।
 
-নিজের PC-র নাম/IP, adapter link ও speed, Windows Private/Public profile, gateway/router এবং পাওয়া LAN ডিভাইসের নাম/IP/MAC ও ping সময় দেখা যায়। এ জন্য অন্য PC-তে Alpine app ইনস্টল থাকা দরকার নেই। অ্যাপে যুক্ত PC/ফোনের তালিকা আলাদা।
+## চালু রাখা
 
-শুধু নির্বাচিত private IPv4 LAN পরীক্ষা হয়; একবারে সর্বোচ্চ একটি /24 অংশে সীমিত ICMP probe এবং Windows ARP neighbour তথ্য ব্যবহার করা হয়। বড় subnet হলে কোন অংশ পরীক্ষা হয়েছে তা দেখায়। Router বা PC firewall ping/discovery বন্ধ রাখলে উত্তর নাও আসতে পারে। ARP-এর পুরোনো এন্ট্রি থাকতেও পারে। তাই “পাওয়া ডিভাইস” সংখ্যা সব PC-র নিশ্চিত মোট সংখ্যা বা কেবল নষ্ট হওয়ার চূড়ান্ত পরীক্ষা নয়। Internet ছাড়া এই পরীক্ষা চলে।
+Server PC-এর Sleep বন্ধ রাখুন। Window বন্ধ করলে app tray-তে চলে; **Stop and exit** করলে সার্ভার বন্ধ হয়। Auto-start Windows user sign-in করার পরে চলে। Printer যে Counter-এ লাগানো, সেখানেই printer নির্বাচন করতে হবে।
 
-## দৈনিক ব্যবহার ও ব্যাকআপ
+আগের MongoDB server configuration থাকলে সেটি চুপচাপ SQLite-তে বদলানো বা মুছে ফেলা হয় না। নতুন PC-তে fresh setup SQLite পাবে। বর্তমান টেস্টিংয়ে পুরোনো লোকাল data transfer বাদ দেওয়া হয়েছে। Optional encrypted backup-এর আগের সুবিধা রাখা আছে।
 
-- মূল PC ও router চালু রাখুন। Internet না থাকলেও LAN/Wi-Fi বন্ধ করা যাবে না। Window বন্ধ করলে সার্ভার tray-তে থাকে। Tray থেকে Stop and exit দিলে লোকাল পরিষেবা বন্ধ হবে। Windows-এ user sign-in করার পরে auto-start চলে; Windows login হওয়ার আগের service হিসেবে এই সংস্করণ চালু হয় না।
-- `ব্যাকআপ সংরক্ষণ` দিয়ে অন্য drive-এ password-সহ encrypted backup রাখুন। Password হারালে backup খোলা যাবে না। Bootstrap backup এবং local MongoDB আলাদা folder-এ থাকে; uninstall app data মুছে দেয় না।
-- server PC বদলানো/সম্পূর্ণ restore একটি migration; অন্য PC-তে পুরোনো server-এর পাশাপাশি clone চালাবেন না। Developer-কে encrypted backup ও চলমান server-এর অবস্থা দিন।
-- মূল PC নষ্ট/বন্ধ থাকলে LAN waiter কাজ করবে না। কাউন্টার তার বর্তমান বৈধ session-এ আগের offline SQLite ব্যবস্থায় কাজ করতে পারে; server ফিরলে সিঙ্ক হবে।
-- app update বসানোর আগে সব কাউন্টারের sync শেষ করুন এবং server-এর backup নিন। Counter ও Waiter-এর বর্তমান update channel আলাদা থাকে।
+## Developer checks
 
-## Developer architecture ও validation
+Local SQLite uses WAL, FULL synchronous commits and serialized transactions. BSON encoding preserves dates, IDs and binary values for the existing cloud protocol. Each business mutation and its outbox pointer commit together. The existing Mongoose schemas, password hooks, API guards, counter leases and request reducers run over a local driver backed by the pinned Mingo query library. This is an adapter for this application's tested operations, not a general MongoDB-compatible database server.
 
-Dedicated authenticated loopback MongoDB single-node replica set, existing Express API on LAN, existing Next Admin standalone on loopback, DPAPI-protected manager configuration. Cloud handoff is inactive by default. One local authority captures MongoDB change streams into a durable outbox and sends sequenced, frozen BSON batches. On restart it reconciles current IDs with acknowledged/pending IDs, including deletions, before opening a fresh live stream; the last committed Windows writes do not depend on a stale resume token. Mirror replacement/deletion plus checkpoint commits atomically. Auth sessions, login buckets, push devices and relay credentials are excluded.
+The cloud entry continues to use MongoDB. The opt-in `dist/local-sqlite-server.js` entry installs the SQLite driver before loading models. SQLite files and private session configuration stay on the server PC; Windows DPAPI protects the manager's credentials.
 
-Cloud business requests are encrypted relay jobs delivered outbound to the restaurant PC. Existing local role/permission guards run under a MongoDB transaction with a durable result ledger. Committed local operations return immediately; the durable background mirror does not delay their response. Subsequent online reads use the same local authority; offline cloud reports show the last mirror. Timed-out requests are reported as unconfirmed; no blind automatic payment or printing retry occurs. Cloud JWT signing secrets are never exported. Initial encrypted bootstrap includes only the existing password-vault/developer-backup keys, developer-code hash and Cloudinary account name needed for compatibility.
+Tests passed: 43 existing simple-app tests on SQLite; 43 on MongoDB; storage rollback/isolation/restart; fake-cloud offline login/order/payment, restart and mirror; remote Admin/password changes; original Admin login/menu; manager resume/startup, encrypted backup and current Electron Counter main/preload/SQLite with preview-only printing.
 
-Tests use dedicated localhost replica-set ports and generated fake databases. Current Counter main/preload/SQLite, offline staff login/order/payment, restart, cloud mirroring, remote password change, original local Admin cookies/pages, encrypted backup decryption and device presence are exercised. Physical printer testing must be completed on the restaurant PC. The test laptop is never activated as the live cloud authority.
-
-Build with `node local-server/scripts/package.cjs` from the Admin repository after installing the existing project/desktop build dependencies. `runtime`, `dist`, MongoDB files and installer output are ignored by Git. Runtime packaging explicitly includes physical production dependencies so developer junctions cannot be required on the restaurant PC.
-
-From `local-server`, run `npm run test:network` for bounded Windows link/self-ping checks and `npm run test:integration` for the isolated full system. Integration refuses to run if any reserved QA port is already occupied. Set `ALPINE_QA_MONGOD` to a MongoDB 8.0 executable if it is not in Program Files. Set `QA_PACKAGED_RUNTIME` to `release/win-unpacked/resources` to verify the actual packaged API/Admin, not the developer dependency tree. QA proof files are written to a generated temporary folder and their path is printed.
-
-## v1.0.1 — interrupted setup recovery
-
-Local startup waits up to 120 seconds for cold database/index initialization and uses direct loopback HTTP independently of proxy settings. A timed-out API child is stopped before the error is shown, and resume/cancel clean only processes owned by this manager. Existing MongoDB data and encrypted import backups are retained. A partial API/Admin start is recovered as a pair; active setup cannot be cancelled accidentally. Sanitized startup logs are stored in the server profile’s `logs` folder.
-
-Use `npm run test:startup` for slow-start, failed-start retry, private identity, secret-redaction and active-service regression checks. `node scripts/repack.cjs` reuses the checksum-verified initial dependency payload only when the Admin/API dependency locks are unchanged; it verifies the complete new installer’s embedded code. For dependency changes use the full `package.cjs` build.
+Build the API, prepare physical API production dependencies and the unchanged Admin standalone runtime, then run `node local-server/scripts/installer.cjs`. Dependency locks changed, so the old code-only `repack.cjs` shortcut must not be used. Use `node local-server/tests/sqlite.integration.cjs --manager`; `QA_PACKAGED_RUNTIME` can select the actual packaged resources for the same checks. QA creates independent databases and refuses occupied test ports. The live restaurant cloud is not contacted by these tests.
