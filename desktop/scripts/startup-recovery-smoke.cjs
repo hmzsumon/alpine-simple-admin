@@ -16,7 +16,7 @@ const listen=port=>new Promise(resolve=>{server=http.createServer((req,res)=>{if
   await wait(async()=>(await text()).includes('Sign in to your counter'));
   await call('login',{identifier:'qa@alpine.local',password:'QA-NOT-A-REAL-PASSWORD',server:'http://127.0.0.1:'+port});
   await wait(async()=>(await text()).includes('Retry connection'));
-  let state=await call('getState');assert.equal(state.requiresLogin,false);assert.equal(state.snapshot,undefined);assert.deepEqual(state.choices,[]);assert.match(state.problem,/Offline/);assert.equal(state.pending,0);assert.equal(loginPosts,1);
+  let state=await call('getState');assert.equal(state.requiresLogin,false);assert.equal(state.snapshot,undefined);assert.deepEqual(state.choices,[]);assert.match(state.problem,/LAN server/);assert.equal(state.pending,0);assert.equal(loginPosts,1);
   const {DatabaseSync}=require('node:sqlite'),db=new DatabaseSync(path.join(profile,'counter.sqlite'));db.prepare('INSERT INTO meta VALUES(?,?)').run('startupQaPreserved',JSON.stringify('keep-this-record'));db.close();
   fs.writeFileSync(path.join(profile,'interrupted.txt'),await text());
  }else if(stage==='restored'){
