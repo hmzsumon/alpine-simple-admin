@@ -43,3 +43,9 @@ Tests use dedicated localhost replica-set ports and generated fake databases. Cu
 Build with `node local-server/scripts/package.cjs` from the Admin repository after installing the existing project/desktop build dependencies. `runtime`, `dist`, MongoDB files and installer output are ignored by Git. Runtime packaging explicitly includes physical production dependencies so developer junctions cannot be required on the restaurant PC.
 
 From `local-server`, run `npm run test:network` for bounded Windows link/self-ping checks and `npm run test:integration` for the isolated full system. Integration refuses to run if any reserved QA port is already occupied. Set `ALPINE_QA_MONGOD` to a MongoDB 8.0 executable if it is not in Program Files. Set `QA_PACKAGED_RUNTIME` to `release/win-unpacked/resources` to verify the actual packaged API/Admin, not the developer dependency tree. QA proof files are written to a generated temporary folder and their path is printed.
+
+## v1.0.1 — interrupted setup recovery
+
+Local startup waits up to 120 seconds for cold database/index initialization and uses direct loopback HTTP independently of proxy settings. A timed-out API child is stopped before the error is shown, and resume/cancel clean only processes owned by this manager. Existing MongoDB data and encrypted import backups are retained. A partial API/Admin start is recovered as a pair; active setup cannot be cancelled accidentally. Sanitized startup logs are stored in the server profile’s `logs` folder.
+
+Use `npm run test:startup` for slow-start, failed-start retry, private identity, secret-redaction and active-service regression checks. `node scripts/repack.cjs` reuses the checksum-verified initial dependency payload only when the Admin/API dependency locks are unchanged; it verifies the complete new installer’s embedded code. For dependency changes use the full `package.cjs` build.
