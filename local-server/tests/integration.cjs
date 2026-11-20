@@ -67,6 +67,9 @@ async function main(){
   assert.equal((await ldb.collection('admin_users').findOne({_id:owner._id})).sessionVersion,1);
   const jobs=await cdb.collection('hub_jobs').find({}).toArray();assert(jobs.length>=3);assert(jobs.every(j=>!JSON.stringify(j).includes(password)));
   const events=await ldb.collection('hub_outbox').find({}).toArray();assert(events.every(e=>!['admin_sessions','hub_jobs'].includes(e.collection)));
+  const checkpoint=await cdb.collection('hub_cloud').findOne({_id:'main'}),lockBatch={from:checkpoint.seq+1,to:checkpoint.seq+1,changes:[]};
+  await cdb.collection('hub_cloud').updateOne({_id:'main'},{$set:{lock:'interrupted-fake-cloud-worker',lockHash:cryptoTools.digest(cryptoTools.pack(lockBatch)),lockUntil:new Date(Date.now()+60000)}});
+  const recovered=await request(cloudUrl,'/api/hub/mirror',grant.secret,{batch:cryptoTools.pack(lockBatch).toString('base64')});assert.equal(recovered.sequence,lockBatch.to);
   const result={ok:true,isolated:true,cloudDatabase:cloudDb,localDatabase:localDb,offlineLogin:true,offlineOrderAndPayment:true,requestRetryExactlyOnce:true,offlineRestart:true,backgroundMirror:true,remoteAdmin:true,encryptedRelay:true,realOrders:0,physicalPrints:0};fs.writeFileSync(path.join(proof,'hub-integration.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result));
   if(process.argv.includes('--manager')){
    local.kill();await new Promise(r=>local.once('exit',r));
