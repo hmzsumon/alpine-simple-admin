@@ -55,7 +55,7 @@ async function main(){
   // Restart while offline: persisted records and exact outbox survive.
   local.kill();await new Promise(r=>local.once('exit',r));local=child(process.execPath,['dist/local-sqlite-server.js'],localEnv);await until(()=>fetch(localUrl+'/health').then(r=>r.ok),'Local restart');assert.equal((await request(localUrl,'/api/auth/me',cashLogin.token)).user.id,cashLogin.user.id);
   cloud=child(process.execPath,['-e',cloudScript],env);await until(()=>fetch(cloudUrl+'/health').then(r=>r.ok),'Cloud restart');
-  await until(async()=>{const w=await cdb.collection('admin_workspace').findOne({_id:'main'});return w.state.orders.find(o=>o.id===paid.id)?.paymentStatus==='paid';},'Offline sync');
+  await until(async()=>{const w=await cdb.collection('admin_workspace').findOne({_id:'main'});return w.state.orders.find(o=>o.id===paid.id)?.paymentStatus==='paid';},'Offline sync',90000); // Include the 18-second network timeout and retry budget after force-killing the fake cloud.
   const mirrored=(await cdb.collection('admin_workspace').findOne({_id:'main'})).state.orders.filter(o=>o.id===paid.id);assert.equal(mirrored.length,1);assert.equal(mirrored[0].payments.length,1);
   // Remote admin reads and edits use local commits; verify the background mirror separately.
   const remote=await request(cloudUrl,'/api/simple/register',ownerLogin.token);assert(remote);
