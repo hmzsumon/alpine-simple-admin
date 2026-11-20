@@ -38,7 +38,7 @@ async function main(){
   for(const [name,docs] of Object.entries(snapshot.snapshot.collections))if(docs.length)await ldb.collection(name).insertMany(docs);
   await request(cloudUrl,'/api/hub/activate',grant.secret,{hash:snapshot.hash});
   const storageKey=crypto.randomBytes(32).toString('base64'),internal=crypto.randomBytes(32).toString('base64url');
-  const localEnv={...env,MONGODB_DB:localDb,JWT_SECRET:crypto.randomBytes(48).toString('hex'),ALPINE_LOCAL_HUB:'1',PORT:'4261',ALPINE_HUB_CLOUD:cloudUrl,ALPINE_HUB_ID:grant.id,ALPINE_HUB_DEVICE_KEY:grant.secret,ALPINE_HUB_PRIVATE_KEY:pair.privateKey,ALPINE_HUB_STORAGE_KEY:storageKey,ALPINE_HUB_INTERNAL:internal};
+  const localEnv={...env,MONGODB_DB:localDb,JWT_SECRET:crypto.randomBytes(48).toString('hex'),ALPINE_LOCAL_HUB:'1',ALPINE_HUB_DIAGNOSTICS:'1',PORT:'4261',ALPINE_HUB_CLOUD:cloudUrl,ALPINE_HUB_ID:grant.id,ALPINE_HUB_DEVICE_KEY:grant.secret,ALPINE_HUB_PRIVATE_KEY:pair.privateKey,ALPINE_HUB_STORAGE_KEY:storageKey,ALPINE_HUB_INTERNAL:internal};
   local=child(process.execPath,['dist/local-server.js'],localEnv);await until(()=>fetch(localUrl+'/health').then(r=>r.ok),'Local API');
   // Internet/cloud down: local staff can log in and transact on the same LAN API.
   cloud.kill();await new Promise(r=>cloud.once('exit',r));
@@ -57,7 +57,7 @@ async function main(){
   cloud=child(process.execPath,['-e',cloudScript],env);await until(()=>fetch(cloudUrl+'/health').then(r=>r.ok),'Cloud restart');
   await until(async()=>{const w=await cdb.collection('admin_workspace').findOne({_id:'main'});return w.state.orders.find(o=>o.id===paid.id)?.paymentStatus==='paid';},'Offline sync');
   const mirrored=(await cdb.collection('admin_workspace').findOne({_id:'main'})).state.orders.filter(o=>o.id===paid.id);assert.equal(mirrored.length,1);assert.equal(mirrored[0].payments.length,1);
-  // Remote admin reads and edits execute on LAN, then return only after mirror confirmation.
+  // Remote admin reads and edits use local commits; verify the background mirror separately.
   const remote=await request(cloudUrl,'/api/simple/register',ownerLogin.token);assert(remote);
   const role=await request(cloudUrl,'/api/admin/roles',ownerLogin.token);assert(role);
   const menuState=await request(cloudUrl,'/api/admin/state',ownerLogin.token);const changedMenu=menuState.data.menu.map(m=>m.id===item.id?{...m,price:item.price+1}:m);await request(cloudUrl,'/api/admin/state',ownerLogin.token,{revision:menuState.revision,changes:{menu:changedMenu}},200,'PATCH');
