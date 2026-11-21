@@ -19,7 +19,7 @@ function files(dir,prefix=''){return fs.readdirSync(dir,{withFileTypes:true}).fl
   const targets=['Alpine Local Server.exe','resources/app.asar','resources/app.asar.unpacked/dist/server-process-host.exe','resources/admin/server.js',...folders];
   for(const name of targets)if(!fs.existsSync(path.join(stage,name)))throw Error('Fresh runtime missing: '+name);
   cp.execFileSync(zip,['d','-bd',outFile,...folders],{windowsHide:true,maxBuffer:1024*1024});
-  cp.execFileSync(zip,['u','-bd','-mx=3','-md=1m','-ms=off','-mf=BCJ','-mtm=off',outFile,...targets],{cwd:stage,windowsHide:true,maxBuffer:1024*1024});
+  cp.execFileSync(zip,['u','-bd','-mx=3','-md=1m','-ms=off','-mf=BCJ','-mtm=off','-up1q1r2x2y2z2w2',outFile,...targets],{cwd:stage,windowsHide:true,maxBuffer:1024*1024});
   // Extract every replaced file to a disposable verifier and compare bytes;
   // no stale API modules or old Next build manifest may remain in these roots.
   const verify=fs.mkdtempSync(path.join(require('node:os').tmpdir(),'alpine-payload-qa-'));
