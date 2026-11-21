@@ -1,5 +1,5 @@
 /* ── Manager screen and protected restaurant processes recover independently ── */
-const {app,BrowserWindow,ipcMain,safeStorage,dialog,shell,Tray,Menu,nativeImage,powerSaveBlocker}=require('electron');
+const {app,BrowserWindow,ipcMain,safeStorage,dialog,shell,Tray,Menu,nativeImage,powerSaveBlocker,net}=require('electron');
 const path=require('node:path'),fs=require('node:fs');const {Controller}=require('./controller.cjs');const {durableWrite}=require('./config-store.cjs');const {ps,psQuote}=require('./engine.cjs');const {adapters,scanNetwork}=require('./network.cjs');
 const {Discovery,DISCOVERY_PORT}=require('./discovery.cjs');app.disableHardwareAcceleration();
 const root=process.env.ALPINE_SERVER_QA_PROFILE||app.getPath('userData');if(process.env.ALPINE_SERVER_QA_PROFILE)app.setPath('userData',root);
@@ -17,7 +17,7 @@ function createWindow(){
 }
 function checked(event){if(!win||win.isDestroyed()||event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame||!['index.html','recovery.html'].some(file=>event.senderFrame.url===require('node:url').pathToFileURL(path.join(__dirname,file)).href))throw Error('Invalid manager window.');}
 function handler(name,action){ipcMain.handle(name,async(event,...args)=>{checked(event);try{return {ok:true,value:await action(...args)};}catch(error){return {ok:false,error:error.message||'The action could not be completed.'};}});}
-function initialize(){if(controller)return controller;controller=new Controller({root,runtime,nodeExe:process.execPath,safeStorage,progress:text=>{statusText=text;}});bootError='';return controller;}
+function initialize(){if(controller)return controller;controller=new Controller({root,runtime,nodeExe:process.execPath,safeStorage,cloudFetch:(url,options)=>net.fetch(url,options),diagnostic:log,progress:text=>{statusText=text;}});bootError='';return controller;}
 async function restart(force=true){try{const c=initialize();if(c.config?.phase==='active'){statusText='Checking saved settings and restarting the local server…';await c.start(force);statusText=unclean?'Server recovered after the interrupted shutdown. Saved records retained.':'Restaurant server running';failures=0;}else statusText='Saved setup loaded. Continue setup below.';bootError='';}catch(error){bootError=error.message;statusText=error.message;log('Server start failed: '+String(error.message||'Unknown error').slice(0,300));throw error;}}
 function autoStart(value){if(process.env.ALPINE_SERVER_QA_PROFILE||!app.isPackaged)return;app.setLoginItemSettings({openAtLogin:!!value,path:process.execPath,args:[]});}
 async function askExit(){const result=await dialog.showMessageBox(win,{type:'warning',buttons:['Keep running','Stop server'],defaultId:0,cancelId:0,message:'Stop the restaurant server?',detail:'Local waiter login, orders and counter synchronization resume when this app starts again.'});if(result.response===1){quitting=true;app.quit();}}

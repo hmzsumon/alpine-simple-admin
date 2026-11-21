@@ -1,10 +1,20 @@
-# Alpine Local Server 1.1.2 · Restart recovery
+# Alpine Local Server 1.1.3 · Restart recovery
 
 বর্তমান Windows Counter, Android Waiter এবং Admin রেখেই একটি PC-তে লোকাল সার্ভার চলে। নতুন KOT বা অন্য কাজের নিয়ম যোগ করা হয়নি। এই সংস্করণে নতুন সেটআপে SQLite ব্যবহৃত হয়; MongoDB ইনস্টল বা engine download লাগে না। Cloud আগের MongoDB-তেই থাকে।
 
+## অফলাইন সার্ভারে হিস্ট্রি রিসেট
+
+অনলাইন Admin → Developer tools → Unlock → Prepare history reset → Preview → `RESET HISTORY` লিখে Confirm করুন। সার্ভার PC বন্ধ থাকলেও অনুরোধ ক্লাউডে থাকে। PC ক্লাউডে যুক্ত হলে এই সংস্করণ অনুরোধটি একবার প্রয়োগ করে: সব অর্ডার, বুকিং, পেমেন্ট, ক্যাশ ও লেনদেনের রিপোর্ট রিসেট হয়; মেনু/দাম, কর্মী/পাসওয়ার্ড, হল/টেবিল ও কাউন্টার সেটআপ থাকে। PC-তে প্রয়োগের সময় পর্যন্ত হিস্ট্রি মুছবে, অফলাইনে নেওয়া অর্ডারসহ। প্রয়োগের আগে PC-তে encrypted backup থাকে।
+
+অবস্থা আলাদা: queued = PC-র অপেক্ষায়; applied = PC-তে রিসেট হয়েছে, সিঙ্ক বাকি; synced = ক্লাউডে সিঙ্কও হয়েছে। বন্ধ PC-র ডাটা সঙ্গে সঙ্গে মোছার দাবি করা হয় না। নিশ্চিত অনুরোধ বাতিল করা যায় না। পুরনো server সংস্করণ রিসেট প্রয়োগ করতে পারে না; 1.1.3 বা পরের সংস্করণ দিয়ে খুলতে হবে। পুরনো জমে থাকা batch নতুন করে গঠিত হয়, তাই পুরনো টাকা/অর্ডার ফিরে আসে না। সার্ভারের enrollment/পরিচয় বদলায় না।
+
+## সেটআপে ক্লাউড সংযোগ
+
+Manager-এর Owner setup/cancel/resume অনুরোধ এখন Electron-এর Chromium network stack ব্যবহার করে, Windows-এর browser network/proxy ব্যবস্থার সঙ্গে সামঞ্জস্যের জন্য। ব্যর্থ হলে নির্দিষ্ট error code ও endpoint path `logs/manager.log`-এ লেখা হয়; password/token লেখা হয় না। API-এর background sync-এ network error code status-এ পাওয়া যায়। স্বয়ংক্রিয়ভাবে setup-এর POST পুনরায় পাঠানো হয় না। ব্রাউজারে /health OK হওয়া মানেই app-এর সব request সফল হয়েছে নয়; লক্ষ্য PC-র নির্দিষ্ট কারণ তার নতুন log দিয়ে যাচাই করতে হবে।
+
 ## ফোনে সার্ভার অটোমেটিক খোঁজা
 
-Waiter 1.0.19-simple এবং এই Server 1.1.2 ব্যবহার করুন। প্রথমবার Server app-এ **Private LAN-এ সংযোগ দিন** চাপুন এবং Windows-এর অনুমতি দিন। একই restaurant Wi-Fi-তে ফোনে **সার্ভার অটোমেটিক খুঁজুন** চাপুন। Server PC-তে দেখানো ৮ অক্ষরের কোড মিলিয়ে restaurant নির্বাচন করে লগইন করুন। এরপর একই server-এর IP বদলালে app তার সংরক্ষিত পরিচয় যাচাই করে নতুন ঠিকানায় যাবে। নতুন server/নতুন restaurant হলে আবার কোড মিলিয়ে নির্বাচন করতে হবে।
+Waiter 1.0.19-simple এবং এই Server 1.1.3 ব্যবহার করুন। প্রথমবার Server app-এ **Private LAN-এ সংযোগ দিন** চাপুন এবং Windows-এর অনুমতি দিন। একই restaurant Wi-Fi-তে ফোনে **সার্ভার অটোমেটিক খুঁজুন** চাপুন। Server PC-তে দেখানো ৮ অক্ষরের কোড মিলিয়ে restaurant নির্বাচন করে লগইন করুন। এরপর একই server-এর IP বদলালে app তার সংরক্ষিত পরিচয় যাচাই করে নতুন ঠিকানায় যাবে। নতুন server/নতুন restaurant হলে আবার কোড মিলিয়ে নির্বাচন করতে হবে।
 
 Discovery UDP 4252-এ শুধু private LAN-এ উত্তর দেয়। প্রতিটি fresh nonce, advertised IP/API port ও restaurant identity-তে persistent server key-এর RSA signature থাকে। Password/session token discovery-তে পাঠানো হয় না। ভুল key বা ভিন্ন server-এ অর্ডার স্বয়ংক্রিয়ভাবে পাঠানো হয় না। Router guest/client isolation বা Windows Public network/firewall discovery আটকে রাখলে আগে trusted Private LAN access ঠিক করতে হবে।
 
@@ -18,7 +28,7 @@ Windows-এ আগের user account দিয়ে sign-in করলে সক�
 - GPU acceleration ও persistent browser session cache ব্যবহার করা হয় না। Renderer crash হলে পর্দা আবার খোলে; startup ব্যর্থ হলে কারণ ও Restart বাটন দেখায়। তিনবার স্বাস্থ্য-পরীক্ষা ব্যর্থ হলে সার্ভার আবার চালুর চেষ্টা করে।
 - সব settings copy পড়া না গেলে database রেখে recovery screen দেখায়; চুপচাপ নতুন restaurant বানায় না। **সার্ভার পুনরায় চালু করুন** ও **Stop and exit** বাটন পাওয়া যাবে।
 
-Update: পুরনো app পুরো বন্ধ করে 1.1.2 installer বর্তমান installation-এর ওপর বসান। সাদা পর্দায় বন্ধ না হলে Ctrl+Shift+Esc → Task Manager → Details → Alpine Local Server.exe → End process tree; তারপর update করুন। Server-এর settings/database folder রেখে দিন। Hardware/storage damage বা বিদ্যুৎ না থাকা অবস্থায় চালু থাকা সফটওয়্যার দিয়ে নিশ্চিত করা যায় না।
+Update: পুরনো app পুরো বন্ধ করে 1.1.3 installer বর্তমান installation-এর ওপর বসান। সাদা পর্দায় বন্ধ না হলে Ctrl+Shift+Esc → Task Manager → Details → Alpine Local Server.exe → End process tree; তারপর update করুন। Server-এর settings/database folder রেখে দিন। Hardware/storage damage বা বিদ্যুৎ না থাকা অবস্থায় চালু থাকা সফটওয়্যার দিয়ে নিশ্চিত করা যায় না।
 
 ## প্রথম পরীক্ষা
 
