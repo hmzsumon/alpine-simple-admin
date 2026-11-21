@@ -2,6 +2,13 @@
 
 Offline-first cashier desktop for Windows 10/11 x64. Electron, React, TypeScript and a SQLite worker share the backend's audited money rules. Owner/Admin continue using the existing web panel. No local MongoDB installation is needed.
 
+## Waiter drafts and order prices (1.0.19)
+
+- Dine-in: choose the waiter and table, add items, then use **Save draft · waiter**, **F4** or **Ctrl+S**. This saves only on the current counter PC; it creates no sale, server request or print job.
+- Selecting that waiter restores a single saved draft automatically. Several drafts show a table/time chooser. Saved drafts survive app restart. F5 converts the entry to a regular order and removes the saved draft atomically; stale copies in another window cannot create a duplicate order.
+- Drafts belong to the current restaurant server, counter and reset epoch. They are not waiter-phone bookings and are not cloud-synced. Customer details, packing charge and per-order prices are retained.
+- Items whose English/Bangla name ends with **Dish / ডিশ / ডিস** allow a unit price for that order, in Counter and Android Waiter. Existing fish price entry remains available. Menu catalog prices stay unchanged. Update Local Server to 1.1.1 and Android Waiter to 1.0.18-simple.
+
 ## Cashier setup
 
 1. Install the latest version from https://alpine-simple-admin.vercel.app/download/windows . The initial Windows installer has no commercial publisher certificate; do not use an installer from an unknown source.

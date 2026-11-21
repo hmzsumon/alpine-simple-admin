@@ -34,7 +34,7 @@ export function applyCommand(original:Snapshot,event:DesktopCommand):Snapshot {
    const items:Order['items']=body.items.map(v=>{
     if(!isRecord(v)||!Number.isInteger(v.quantity)||Number(v.quantity)<1||Number(v.quantity)>99)throw new ApiError(400,'Enter quantities from 1 to 99.');
     const item=c.menu.find(m=>m.id===v.menuId&&m.active);if(!item)throw new ApiError(409,'Selected item is unavailable.');
-    if(v.unitPrice!==undefined&&!canSetOrderPrice(item))throw new ApiError(403,'Only Fish and Plain Rice Dish prices can be overridden.');
+    if(v.unitPrice!==undefined&&!canSetOrderPrice(item))throw new ApiError(403,'Only Fish and items ending in Dish / ডিশ prices can be overridden.');
     if(body.localWaiter&&v.unitPrice===undefined&&v.expectedPrice!==undefined&&v.expectedPrice!==item.price)throw new ApiError(409,'Menu price changed. Refresh before sending.');
     if(v.fulfillment!==undefined&&!['dine_in','parcel'].includes(String(v.fulfillment)))throw new ApiError(400,'Select a valid serving type.');
     const price=v.unitPrice!==undefined?cents(v.unitPrice,false)/100:item.price;if(price===null)throw new ApiError(400,'Enter this item’s price for this order.');cents(price);

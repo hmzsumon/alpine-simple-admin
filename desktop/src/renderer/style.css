@@ -42,3 +42,6 @@ nav button.active span{background:#1E40AF;color:#FFF}.notification-success .noti
 .combined-counter-note{color:#1d4ed8;font-size:11px;line-height:1.6;margin-top:7px}.entry-table-picker{min-width:0}.hall-filters{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}.hall-filters button{display:flex;align-items:center;gap:5px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;color:#475569;padding:5px 7px;font-size:10px}.hall-filters button[aria-pressed=true]{background:#eff6ff;border-color:#2563eb;color:#1d4ed8}.hall-filters span{padding:1px 4px;border-radius:4px;background:#e2e8f0;font-size:9px}.coverage-halls{display:flex;flex-wrap:wrap;gap:9px;margin:15px 0}.coverage-halls article{padding:12px 16px;border:1px solid #cbd5e1;border-radius:9px;background:#f8fafc}.coverage-halls strong{font-size:13px}.counter-coverage>.secondary{margin:14px 0}.counter-coverage>.muted{margin:0}
 
 .entry-context>.entry-table-picker{margin:12px 0}
+
+/* Waiter drafts remain separate from completed bills. */
+.waiter-drafts{background:#f1f5f9;padding:16px;border-radius:10px;margin:16px 0}.waiter-draft-row{display:flex;gap:10px;margin-top:10px}.waiter-draft-row>button:first-child{flex:1;text-align:left}.waiter-draft-row b{margin-left:12px}

@@ -22,7 +22,7 @@ export function adjustOrder(original:Order,input:Record<string,unknown>,menu:Men
    const item=menu.find(m=>m.id===value.menuId);
    if(!old&&(!item?.active||(item.price===null&&!canSetOrderPrice(item))))throw new ApiError(409,'Selected item is unavailable.');
    const adjustable=canSetOrderPrice({category:old?.category||item?.category,name:old?.name||item?.name,nameBn:old?.nameBn||item?.nameBn});
-   if(value.unitPrice!==undefined&&!adjustable)throw new ApiError(403,'Only Fish and Plain Rice Dish prices can be overridden.');
+   if(value.unitPrice!==undefined&&!adjustable)throw new ApiError(403,'Only Fish and items ending in Dish / ডিশ prices can be overridden.');
    const price=value.unitPrice!==undefined?cents(value.unitPrice,false)/100:old?.price??item?.price;
    if(price===null||price===undefined)throw new ApiError(400,'Enter this item’s price.');cents(price);
    return {...(old||{menuId:item!.id,name:item!.name,nameBn:item!.nameBn,station:item!.station,category:item!.category,fulfillment:original.orderType==="takeaway"?"parcel" as const:"dine_in" as const}),quantity:Number(value.quantity),price,...(value.unitPrice!==undefined?{unitPrice:price,priceSetBy:actor.id,priceSetByName:actor.name}:{})};
