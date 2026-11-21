@@ -8,6 +8,7 @@ import SearchableSelect from "@/components/ui/SearchableSelect";
 import { useState } from "react";
 import Link from "next/link";
 import MenuImportPanel from "./MenuImportPanel";
+import MenuCodeUpdatePanel from "./MenuCodeUpdatePanel";
 import { useAuth } from "@/providers/AuthProvider";
 import { useAdminContext } from "@/context/AdminContext";
 import { Plus, Trash2, FileSpreadsheet } from "lucide-react";
@@ -21,6 +22,7 @@ import MenuItemName from "@/components/menu/MenuItemName";
 export default function MenuManagement() {
   const { can } = useAuth();
   const [showImport, setShowImport] = useState(false);
+  const [showCodes,setShowCodes]=useState(false);
   /* ────────── workspace state ────────── */
   const {
     data,
@@ -46,6 +48,7 @@ export default function MenuManagement() {
         </div>
         <div className="menu-actions">
         <Link href="/menu-code-print" target="_blank" className="secondary">Print item codes</Link>
+        {can("menu:manage")&&<button type="button" className="secondary" disabled={busy||showImport||showCodes||mode!=="database"} onClick={()=>setShowCodes(true)}>একসঙ্গে কোড আপডেট</button>}
         {can("menu:manage") && <button type="button" className="secondary" disabled={busy || showImport || mode !== "database"} onClick={() => setShowImport(true)}><FileSpreadsheet size={16}/>Excel Import / Update</button>}
         <button className="secondary" disabled={!can("menu:manage")}
           onClick={() => setModal("category")}>
@@ -64,6 +67,7 @@ export default function MenuManagement() {
         </div>
       </div>
       {showImport && <MenuImportPanel close={() => setShowImport(false)} />}
+      {showCodes&&<MenuCodeUpdatePanel close={()=>setShowCodes(false)}/>}
       <CategoryManagement />
       <div className="filters">
         <SearchBox value={search} onChange={setSearch} />
