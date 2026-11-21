@@ -1,6 +1,6 @@
 {
   "name": "alpine-local-server",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "private": true,
   "description": "SQLite LAN server for the existing Alpine Counter, Waiter and Admin apps",
   "author": "Alpine Restaurant",
@@ -68,6 +68,9 @@
       "deleteAppDataOnUninstall": false,
       "createDesktopShortcut": true,
       "shortcutName": "Alpine Local Server"
-    }
+    },
+    "asarUnpack": [
+      "dist/server-process-host.exe"
+    ]
   }
 }

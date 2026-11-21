@@ -1,3 +1,3 @@
 const {contextBridge,ipcRenderer}=require('electron');
-const names=['status','devices','network','scan-network','network-settings','prepare','setup','resume','cancel','open-admin','autostart','firewall','backup','folder'];
+const names=['status','devices','network','scan-network','network-settings','prepare','setup','resume','cancel','open-admin','autostart','firewall','backup','folder','restart','exit','reload-screen'];
 contextBridge.exposeInMainWorld('server',Object.fromEntries(names.map(name=>[name,(...args)=>ipcRenderer.invoke('server:'+name,...args)])));

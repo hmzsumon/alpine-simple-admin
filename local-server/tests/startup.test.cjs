@@ -33,3 +33,5 @@ test('startup logs redact secrets and MongoDB connection credentials',async()=>{
 });
 
 test('an accidental setup call cannot stop an already active restaurant server',async()=>{const c=controller();c.config={phase:'active'};let stops=0;c.stopApps=async()=>{stops++;};await assert.rejects(c.setup({}),/already set up/);assert.equal(stops,0);assert.equal(c.busy,false);});
+
+test('concurrent active starts share one boot and a forced restart starts it once again',async()=>{const c=controller();c.config={phase:'active',port:await port(),adminPort:await port()};let starts=0,release;const gate=new Promise(r=>release=r);c.mongo=async()=>{};c.stopApps=async()=>{c.children=[];};c.startApi=async()=>{starts++;await gate;c.children.push({serverRole:'api',exitCode:null,killed:false});};c.launch=()=>{const child={serverRole:'admin',exitCode:null,killed:false};c.children.push(child);return child;};c.ready=async()=>{};const a=c.start(),b=c.start();release();await Promise.all([a,b]);assert.equal(starts,1);await c.start();assert.equal(starts,1);await c.start(true);assert.equal(starts,2);});
