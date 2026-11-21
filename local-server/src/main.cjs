@@ -1,6 +1,6 @@
 /* ── Manager screen and protected restaurant processes recover independently ── */
-const {app,BrowserWindow,ipcMain,safeStorage,dialog,shell,Tray,Menu,nativeImage,powerSaveBlocker,net}=require('electron');
-const path=require('node:path'),fs=require('node:fs');const {Controller}=require('./controller.cjs');const {durableWrite}=require('./config-store.cjs');const {ps,psQuote}=require('./engine.cjs');const {adapters,scanNetwork}=require('./network.cjs');
+const {app,BrowserWindow,ipcMain,safeStorage,dialog,shell,Tray,Menu,nativeImage,powerSaveBlocker,net,clipboard}=require('electron');
+const path=require('node:path'),fs=require('node:fs');const {Controller,addresses}=require('./controller.cjs');const {durableWrite}=require('./config-store.cjs');const {ps,psQuote}=require('./engine.cjs');const {adapters,scanNetwork}=require('./network.cjs');
 const {Discovery,DISCOVERY_PORT}=require('./discovery.cjs');app.disableHardwareAcceleration();
 const root=process.env.ALPINE_SERVER_QA_PROFILE||app.getPath('userData');if(process.env.ALPINE_SERVER_QA_PROFILE)app.setPath('userData',root);
 const marker=path.join(root,'manager-running.json');let win,controller,tray,timer,awake,discovery,quitting=false,stopping=false,runtime,statusText='Starting the server manager…',bootError='',unclean=false,failures=0,reloadAttempts=0,watching=false;
@@ -28,6 +28,7 @@ if(!app.requestSingleInstanceLock())app.exit(0);else{
   runtime=process.env.ALPINE_SERVER_QA_RUNTIME||(app.isPackaged?process.resourcesPath:path.join(__dirname,'../runtime'));
   handler('server:status',async()=>({...controller?await controller.status():{version:require('../package.json').version,database:'',phase:'recovery',service:null,addresses:[],busy:false,error:bootError,canCancel:false},message:bootError||statusText,uncleanShutdown:unclean,discovery:discovery?.info(),autoStart:app.getLoginItemSettings().openAtLogin}));
   handler('server:restart',()=>restart());handler('server:exit',askExit);handler('server:reload-screen',()=>{void loadScreen();return true;});
+  handler('server:copy-address',address=>{if(typeof address!=='string'||!addresses(controller?.config?.port||4250).includes(address))throw Error('বর্তমান সার্ভারের ঠিকানা বেছে নিন।');clipboard.writeText(address);return true;});
   handler('server:devices',()=>initialize().devices());handler('server:network',()=>adapters());handler('server:scan-network',index=>scanNetwork(index));handler('server:network-settings',()=>shell.openExternal('ms-settings:network-status'));
   handler('server:prepare',()=>initialize().prepare());
   handler('server:setup',async input=>{if(!input||typeof input.password!=='string'||input.password.length>128||!input.confirmReleased)throw Error('Confirm that all counters have synced and signed out.');const c=initialize(),result=await c.setup(input);c.config.autoStart=input.autoStart!==false;c.save();autoStart(c.config.autoStart);return result;});

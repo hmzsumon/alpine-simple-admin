@@ -1,6 +1,10 @@
-# Alpine Local Server 1.1.3 · Restart recovery
+# Alpine Local Server 1.1.4 · Copy server address
 
 বর্তমান Windows Counter, Android Waiter এবং Admin রেখেই একটি PC-তে লোকাল সার্ভার চলে। নতুন KOT বা অন্য কাজের নিয়ম যোগ করা হয়নি। এই সংস্করণে নতুন সেটআপে SQLite ব্যবহৃত হয়; MongoDB ইনস্টল বা engine download লাগে না। Cloud আগের MongoDB-তেই থাকে।
+
+## সার্ভারের ঠিকানা কপি
+
+চলমান সার্ভারের প্রতিটি LAN/Wi-Fi ঠিকানার পাশে **কপি করুন** বাটন আছে। চাপলে `http://IP:4250` পুরো ঠিকানাটি Windows clipboard-এ যায় এবং **কপি হয়েছে ✓** দেখায়। Counter/Waiter-এর server address ঘরে paste করুন। একাধিক ঠিকানা থাকলে আপনার ডিভাইসের নেটওয়ার্ক থেকে পৌঁছানো যায় এমন ঠিকানাটি বেছে নিন। বর্তমান ইনস্টলেশনের ওপর 1.1.4 বসান; settings/database folder রেখে দিন।
 
 ## অফলাইন সার্ভারে হিস্ট্রি রিসেট
 

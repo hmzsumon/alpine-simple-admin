@@ -1,11 +1,11 @@
-/* Manager-only update: reuse the verified 1.1.1 API/Admin payload, never arbitrary dependencies. */
+/* Manager-only update: reuse the verified 1.1.3 API/Admin payload, never arbitrary dependencies. */
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),cp=require('node:child_process'),{pipeline}=require('node:stream/promises');
-const root=path.resolve(__dirname,'..'),admin=path.resolve(root,'..'),api=path.resolve(admin,'../alpine-api'),pkg=require(path.join(root,'package.json')),base=path.join(root,'release/Alpine-Local-Server-1.1.1-Windows-x64.exe');
-const BASE_SHA='fee7849306e0ce9eff977aeba59bbabbfccb108cbde1b87135de3a855966bd0e',API_COMMIT='af1b56e5096996fae3e73ece58ee8da4fc0411f4',ADMIN_COMMIT='1389d0a5e44ca1677aa3f7af638af6a5d16405ff';
+const root=path.resolve(__dirname,'..'),admin=path.resolve(root,'..'),api=path.resolve(admin,'../alpine-api'),pkg=require(path.join(root,'package.json')),base=path.join(root,'release/Alpine-Local-Server-1.1.3-Windows-x64.exe');
+const BASE_SHA='1c79e37cb0acd5c6fbd942a63c9b2b3ced944d9375ade6b7f030a6d7a8b3ddd0',API_COMMIT='144d16bdfe9f17044e6fe3d1447a60aafd36f0dc',ADMIN_COMMIT='08a8e9ca64cf0c7e4477e985ed2a3ac3527a1bcd';
 const hash=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
 function git(args,cwd){return cp.execFileSync('git',args,{cwd,encoding:'utf8',windowsHide:true}).trim();}
 (async()=>{
- if(pkg.version==='1.1.1'||hash(fs.readFileSync(base))!==BASE_SHA)throw Error('The verified 1.1.1 base installer is required.');
+ if(pkg.version==='1.1.3'||hash(fs.readFileSync(base))!==BASE_SHA)throw Error('The verified 1.1.3 base installer is required.');
  if(git(['rev-parse','HEAD'],api)!==API_COMMIT||git(['status','--porcelain'],api))throw Error('API changed. Use a full runtime build.');
  const changes=git(['diff',ADMIN_COMMIT,'--name-only'],admin).split(/\r?\n/).filter(Boolean);if(changes.some(file=>!file.startsWith('local-server/')))throw Error('Admin application changed. Use a full runtime build.');
  require('./build.cjs');
@@ -21,5 +21,5 @@ function git(args,cwd){return cp.execFileSync('git',args,{cwd,encoding:'utf8',wi
   reused=true;console.log('Verified API/Admin payload reused; manager executable, code and protected host replaced.');return outFile;
  };
  process.env.ELECTRON_BUILDER_COMPRESSION_LEVEL||='3';const builder=require(path.join(admin,'desktop/node_modules/electron-builder'));await builder.build({projectDir:root,targets:builder.Platform.WINDOWS.createTarget('nsis',builder.Arch.x64),config:{electronVersion:require(path.join(admin,'desktop/node_modules/electron/package.json')).version,electronDist:path.join(admin,'desktop/node_modules/electron/dist')}});
- if(!reused)throw Error('The verified manager-only payload was not used.');console.log('Manager-only installer built from the verified 1.1.1 runtime.');
+ if(!reused)throw Error('The verified manager-only payload was not used.');console.log('Manager-only installer built from the verified 1.1.3 runtime.');
 })().catch(error=>{console.error(error.message);process.exitCode=1;});
