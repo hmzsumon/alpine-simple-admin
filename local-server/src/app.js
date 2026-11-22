@@ -25,3 +25,5 @@ $('backup').addEventListener('click',async()=>{await action('backup',$('backup-p
 setInterval(async()=>{try{const status=await call('status');$('devices-section').hidden=status.phase!=='active';if(status.phase==='active')await devices();}catch{}},3000);
 $('network-refresh').addEventListener('click',network);$('network-adapter').addEventListener('change',networkSummary);$('network-scan').addEventListener('click',scan);$('network-settings').addEventListener('click',()=>action('network-settings'));network();
 $('prepare').addEventListener('click',()=>action('prepare'));
+
+setInterval(()=>{void call('screen-alive').catch(()=>{});},2000);void call('screen-alive').catch(()=>{});

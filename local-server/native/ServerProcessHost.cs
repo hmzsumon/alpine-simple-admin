@@ -20,6 +20,15 @@ class ServerProcessHost {
   IntPtr job=IntPtr.Zero;Process child=null;
   try{
    Console.InputEncoding=new UTF8Encoding(false);Console.OutputEncoding=new UTF8Encoding(false);
+   if(args.Length==3&&args[0]=="--manager-birth"){
+    using(Process manager=Process.GetProcessById(int.Parse(args[1]))){if(!String.Equals(manager.MainModule.FileName,System.IO.Path.GetFullPath(args[2]),StringComparison.OrdinalIgnoreCase))return 2;Console.Out.Write(manager.StartTime.ToUniversalTime().Ticks.ToString());return 0;}
+   }
+   if(args.Length==4&&args[0]=="--stop-manager"){
+    using(Process manager=Process.GetProcessById(int.Parse(args[1]))){
+     if(manager.StartTime.ToUniversalTime().Ticks!=long.Parse(args[2])||!String.Equals(manager.MainModule.FileName,System.IO.Path.GetFullPath(args[3]),StringComparison.OrdinalIgnoreCase))return 2;
+     manager.Kill();manager.WaitForExit(5000);return 0;
+    }
+   }
    if(args.Length==1&&(args[0]=="--protect-settings"||args[0]=="--unprotect-settings")){
     byte[] entropy=Encoding.UTF8.GetBytes("Alpine Local Server settings v1");string input=Console.In.ReadToEnd();
     if(args[0]=="--protect-settings")Console.Out.Write(Convert.ToBase64String(ProtectedData.Protect(Encoding.UTF8.GetBytes(input),entropy,DataProtectionScope.CurrentUser)));

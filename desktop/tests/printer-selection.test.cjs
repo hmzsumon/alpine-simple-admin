@@ -1,0 +1,4 @@
+/* ── Printer replacement must not silently route receipt bytes to a virtual or ambiguous printer. ── */
+const test=require('node:test'),assert=require('node:assert/strict'),{receiptPrinter,physicalPrinters}=require('../dist/printer-selection.cjs');
+test('retains installed choice and detects one replacement thermal printer',()=>{assert.equal(receiptPrinter([{name:'RONGTA RP80 Printer'},{name:'Microsoft Print to PDF'}]),'RONGTA RP80 Printer');assert.equal(receiptPrinter([{name:'POS-80'},{name:'HP Office'}],'Old USB Printer'),'POS-80');assert.equal(receiptPrinter([{name:'POS-80'},{name:'RONGTA RP80 Printer'}],'POS-80'),'POS-80');});
+test('multiple receipt choices and generic office printers require selection',()=>{assert.equal(receiptPrinter([{name:'POS-80'},{name:'RONGTA RP80 Printer'}]),'');assert.equal(receiptPrinter([{name:'HP Office'},{name:'Microsoft Print to PDF'}]),'');assert.deepEqual(physicalPrinters([{name:'Fax'},{name:'POS-80'}]),[{name:'POS-80'}]);});

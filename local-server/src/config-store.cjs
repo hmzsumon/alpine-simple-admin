@@ -8,7 +8,7 @@ class ConfigStore{
  load(){
   const candidates=[this.file,this.file+'.tmp',this.file+'.previous'];if(!candidates.some(f=>fs.existsSync(f))){const root=path.dirname(this.file),database=path.join(root,'database');if(fs.existsSync(database)&&fs.readdirSync(database).some(name=>name.endsWith('.sqlite'))||fs.existsSync(path.join(root,'mongodb')))throw Error('Saved server settings are missing. Existing restaurant records have been retained; do not run a new Owner setup.');return null;}
   if(!this.safe.isEncryptionAvailable())throw Error('Windows protected storage is not ready. Sign in to the original Windows account and retry.');
-  try{return this.read(this.file).config;}catch{}
+  try{const committed=this.read(this.file);try{const pending=this.read(this.file+'.tmp');if((pending.config.settingsGeneration||0)>(committed.config.settingsGeneration||0)){const bytes=Buffer.from(pending.bytes);durableWrite(this.file+'.recovery',bytes);fs.renameSync(this.file+'.recovery',this.file);this.recovered=true;return pending.config;}}catch{}return committed.config;}catch{}
   const alternatives=candidates.slice(1).flatMap(file=>{try{return [{...this.read(file),file}];}catch{return [];}}).sort((a,b)=>(b.config.settingsGeneration||0)-(a.config.settingsGeneration||0));
   if(!alternatives.length)throw Error('Saved server settings could not be read. The database has been retained. Open the server folder and contact support; do not run a new Owner setup.');
   const recovered=alternatives[0];if(fs.existsSync(this.file))fs.copyFileSync(this.file,this.file+'.damaged-'+Date.now());

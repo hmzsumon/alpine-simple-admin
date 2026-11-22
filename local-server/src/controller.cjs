@@ -93,14 +93,16 @@ class Controller{
  }
  async stopChild(child){
   if(!child)return;this.children=this.children.filter(p=>p!==child);
+  if(child.serverRole==='api')this.apiReady=false;
   if(child.exitCode===null&&!child.signalCode)await new Promise(resolve=>{const timer=setTimeout(resolve,8000);child.once('exit',()=>{clearTimeout(timer);resolve();});try{child.kill();}catch{clearTimeout(timer);resolve();}});
   // Windows closes job children after the host handle exits. Wait for that
   // bounded cleanup before trying to bind the same port on a restart.
   const port=child.serverRole==='api'?this.config?.port:this.config?.adminPort;if(Number.isInteger(port)&&port>0){const until=Date.now()+3000;while(Date.now()<until){try{await freePort(port);break;}catch{await wait(50);}}}
  }
  async startApi(test=false){
+  this.apiReady=false;
   const c=this.config;await freePort(c.port);const data=path.join(this.root,'api-data');fs.mkdirSync(data,{recursive:true});const child=this.launch(path.join(this.runtime,'api/dist',c.database==='sqlite'?'local-sqlite-server.js':'local-server.js'),data,this.env(test));
-  try{await this.ready('http://127.0.0.1:'+c.port+'/health',child,true);}catch(error){await this.stopChild(child);throw error;}
+  try{await this.ready('http://127.0.0.1:'+c.port+'/health',child,true);this.apiReady=true;}catch(error){await this.stopChild(child);throw error;}
  }
  async start(force=false){if(this.stopping)return;if(this.startFlight)return this.startFlight;this.startFlight=this.startImpl(force).finally(()=>{this.startFlight=null;});return this.startFlight;}
  async startImpl(force=false){

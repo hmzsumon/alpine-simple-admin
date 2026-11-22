@@ -1,0 +1,3 @@
+/* ── Keep a valid choice; auto-select only one recognizable receipt printer. ── */
+export function physicalPrinters<T extends {name:string}>(printers:T[]){return printers.filter(p=>!/Microsoft Print to PDF|OneNote|XPS|Fax|Send to/i.test(p.name));}
+export function receiptPrinter(printers:{name:string}[],saved?:string){const physical=physicalPrinters(printers);if(saved&&physical.some(p=>p.name===saved))return saved;const receipts=physical.filter(p=>/RONGTA|RP[- ]?(?:58|80)|POS[-_ ]?(?:58|80)|(?:58|80)mm|receipt|thermal|Xprinter|XP[-_ ]?(?:58|80)|EPSON.*TM[- ]|BIXOLON|STAR.*TSP/i.test(p.name));return receipts.length===1?receipts[0].name:'';}
