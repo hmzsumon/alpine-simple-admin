@@ -45,3 +45,6 @@ nav button.active span{background:#1E40AF;color:#FFF}.notification-success .noti
 
 /* Waiter drafts remain separate from completed bills. */
 .waiter-drafts{background:#f1f5f9;padding:16px;border-radius:10px;margin:16px 0}.waiter-draft-row{display:flex;gap:10px;margin-top:10px}.waiter-draft-row>button:first-child{flex:1;text-align:left}.waiter-draft-row b{margin-left:12px}
+
+/* ── Login-independent application updates ── */
+.login-update{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);}.login-update h2{font-size:15px}.login-update p{overflow-wrap:anywhere}.login-update small{margin-top:10px;line-height:1.6}.login-update .actions{gap:8px}
