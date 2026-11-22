@@ -1,3 +1,3 @@
 import type {SalesFilters} from '@/types/salesAnalysis';
-export function salesQuery(filters:SalesFilters){return new URLSearchParams({...filters,salesOnly:'true'}).toString();}
+export function salesQuery(filters:SalesFilters){return new URLSearchParams({...filters,hallId:filters.hallId||'',salesOnly:'true'}).toString();}
 export function salesPreset(preset:'today'|'yesterday'|'week'|'month',today:string):SalesFilters{let from=today,to=today;if(preset==='yesterday'){from=to=new Date(Date.parse(today)-86400000).toISOString().slice(0,10);}else if(preset==='week')from=new Date(Date.parse(today)-6*86400000).toISOString().slice(0,10);else if(preset==='month')from=today.slice(0,8)+'01';return {from,to,fromTime:'00:00',toTime:'23:59',waiterId:''};}
