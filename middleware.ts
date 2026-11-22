@@ -39,7 +39,7 @@ export const config = {
   matcher: [
     "/login",
     "/cash-counters/:path*","/daily-print/:path*","/cash/:path*","/cash-print/:path*","/reports/:path*","/payment-methods/:path*",
-    "/developer/:path*",
+    "/developer/:path*","/server-control/:path*",
     "/dashboard/:path*",
     "/orders/:path*",
     "/bill/:path*",

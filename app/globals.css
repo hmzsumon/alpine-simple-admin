@@ -1791,3 +1791,6 @@ input[aria-invalid="true"],select[aria-invalid="true"],textarea[aria-invalid="tr
 .counter-entry .search-select-trigger { @apply min-h-[39px] text-xs; }
 
 .counter-entry .counter-entry-add { @apply m-0 inline-flex h-[42px] min-h-[42px] items-center justify-center gap-1.5 self-end py-0 leading-none; }
+
+/* ── Cloud server controls remain usable independently of an offline workspace ── */
+.cloud-server-control .server-control-counts{grid-template-columns:repeat(5,minmax(0,1fr))}.server-control-stop{display:flex;align-items:flex-start;gap:10px;margin:16px 0}.server-control-stop input{width:18px;height:18px;flex:0 0 18px;margin-top:3px}.cloud-server-control .dev-card>button+button{margin-top:10px}.cloud-server-control .dev-card td{overflow-wrap:anywhere}@media(max-width:760px){.cloud-server-control .server-control-counts{grid-template-columns:repeat(2,minmax(0,1fr))}}
