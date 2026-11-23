@@ -1,0 +1,14 @@
+/* ── Sample prices and stable identities belong to the isolated home demo only ── */
+import type {MenuItem} from '../../shared/types/workspace';
+const groups:[string,string[],number[]][]=[
+ ['Breakfast',['Plain Naan','Garlic Naan','Special Naan','Kima Naan','Chicken Masala Naan','Special Paratha','Kima Paratha','Chicken Masala Paratha','Egg Omelet','Boiled Egg','Mixed Bhaji','Mug Dal'],[20,90,50,220,200,50,220,200,60,40,80,90]],
+ ['Rice & Biryani',['Plain Rice (Half)','Plain Rice (Full)','Chicken Biryani (Half)','Chicken Biryani (Full)','Beef Biryani','Mutton Biryani','Kacchi Biryani','Shahi Biryani','Biryani Rice','Chicken Khichuri','Mutton Khichuri','Chicken Akhni'],[50,100,170,300,480,230,450,260,100,150,160,100]],
+ ['Chicken',['Chicken Grill (Quarter)','Chicken Grill (Half)','Chicken Grill (Full)','Chicken Chap','Chicken Tandoori','Chicken Roast','Chicken Jhalfry (Half)','Chicken Jhalfry (Full)','Chicken Jhalfry (Dish)','Chicken Vegetable','Chicken Soup','Al Faham Chicken'],[120,220,440,200,155,140,160,320,640,120,200,600]],
+ ['Beef & Mutton',['Beef Bhuna (Half)','Beef Bhuna (Full)','Beef Bhuna (Dish)','Kala Bhuna (Half)','Kala Bhuna (Full)','Kala Bhuna (Dish)','Beef Kabab','Mutton Bhuna','Mutton Bhuna (Dish)','Mutton Kabab','Mutton Paya','Mutton Liver'],[220,440,880,240,480,960,180,270,1040,380,240,240]],
+ ['Fish',['Pabda Fish','Bowal Fish','Bag Fish','Baim Fish (Half)','Baim Fish (Full)','Baim Fish (Dish)','Prawn Fish (Half)','Prawn Fish (Full)','Prawn Fish (Dish)','Prawn Dupiaza','Rup Chanda','Shol Fish'],[700,400,250,300,600,1200,450,900,1200,400,450,300]],
+ ['Vegetables & Sides',['Dal (Half)','Dal (Full)','Dal (Dish)','Vegetable (Half)','Vegetable (Full)','Vegetable (Dish)','Eggplant Bharta','Tomato Bharta','Fish Bharta','Potato Bharta','Mixed Salad','Korola Bhaji'],[40,80,120,50,100,200,30,60,40,40,100,60]],
+ ['Drinks',['Raw Tea','Special Tea','Coffee','Cold Coffee','Chocolate Cold Coffee','Apple Juice','Orange Juice','Malta Juice','Mango Shake','Mixed Fruit Juice','Water 500ml','Water 1L'],[10,50,110,120,130,120,130,180,120,220,25,40]],
+ ['Desserts',['Normal Faluda','Special Faluda','Family Faluda','Special Family Faluda','Classic Special Faluda','Sweet Lassi','Mango Lassi','Strawberry Lassi','Chocolate Lassi','Pudding','Firni','Kitkat Shake'],[140,160,300,420,200,110,140,130,160,60,35,190]],
+];
+export function extraDemoMenu():MenuItem[]{let code=801;return groups.flatMap(([category,names,prices])=>names.map((name,index)=>({id:'home-sample-'+code,code:String(code++),name,nameBn:'',category,station:category==='Drinks'||category==='Desserts'?'Drinks':'Kitchen',price:prices[index],active:true})));}
+export function extendDemoMenu(existing:MenuItem[]):MenuItem[]{const ids=new Set(existing.map(item=>item.id)),codes=new Set(existing.map(item=>item.code));const additions=extraDemoMenu().filter(item=>!ids.has(item.id)&&!codes.has(item.code));return additions.length?[...existing,...additions]:existing;}
