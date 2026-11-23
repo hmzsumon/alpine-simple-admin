@@ -79,6 +79,7 @@ async function handle(method:string,value:any,context:CounterWindow){
    const deadline=Date.now()+90000;while(syncing||writing||queuedWrites||draftWrites||printing||pumping){if(Date.now()>deadline)throw Error('Current counter work has not finished. Wait and retry sign-in.');await new Promise(resolve=>setTimeout(resolve,50));}
    if(!value||typeof value.identifier!=='string'||typeof value.password!=='string')throw Error('Enter your mobile/email and password.');const server=validServer(value.server);let r:JsonReply;try{r=await serverRequest(server,'/api/auth/login',{email:value.identifier,password:value.password});}catch(e){throw Error(connectionMessage(server,e));}const data=r.data;if(!r.ok)throw Error(data.error||'Sign-in failed');
    candidate={token:data.token,user:data.user,expiresAt:data.expiresAt,server,...(value.mode==='assistant'?{mode:'assistant' as const}:{})};
+   if(!Number.isFinite(Date.parse(candidate.expiresAt))||Date.parse(candidate.expiresAt)<=Date.now())throw Error('লগইন সেশনের মেয়াদ সঠিক নয়। এই PC ও সার্ভার PC-র তারিখ-সময় মিলিয়ে আবার চেষ্টা করুন।');
    if(!(candidate.mode==='assistant'?['cash:operate','orders:create','orders:read']:['cash:operate','cash:read','orders:create','payments:collect']).every(p=>data.user.permissions.includes(p)))throw Error('This account does not have cashier permissions.');
    let local=await call<DbState>('state');if(local.snapshot&&(local.snapshot.catalog.mode||'primary')!==(candidate.mode||'primary'))throw Error('Sign out and release the saved PC mode before switching.');const pending=local.settings.pendingTransfer||local.settings.pendingHandover,originalId=local.settings.pendingTransfer?.body.actorId||local.snapshot?.catalog.user.id||session?.user.id;
    if(candidate.mode==='assistant'&&local.snapshot?.catalog.mode==='assistant'&&!pending&&local.settings.server===server&&(!local.assistantIntent||originalId===data.user.id)){await api('/api/desktop/assistant/request',{deviceId,counterId:local.snapshot.catalog.counter.id,deviceName:hostname(),renew:true},candidate);}
@@ -93,7 +94,7 @@ async function handle(method:string,value:any,context:CounterWindow){
    }
    session={...candidate,counterId:local.snapshot?.catalog.counter.id};await saveSession();accepted=true;await call('settings',{server});online=true;
    try{choices=session.mode==='assistant'?await assistantChoices():await loadCounterChoices(api,deviceId);problem='';}catch(e){choices=[];problem=e instanceof Error?e.message:'Counter setup was interrupted. Check the restaurant server and try again.';changed();}
-   authenticating=false;if(session.counterId||pending)await sync();changed();return getState(context);
+   authenticating=false;if(session.counterId||pending)await sync();changed();const signedState=await getState(context);if(signedState.requiresLogin)throw Error(problem||'Sign-in ended before the counter was ready. Check the restaurant server and sign in again.');return signedState;
   }catch(error){if(candidate&&!accepted)await api('/api/auth/logout',{},candidate).catch(()=>{});throw error;}
   finally{authenticating=false;live?.start(session&&Date.parse(session.expiresAt)>Date.now()?session:undefined);changed();}
  }
