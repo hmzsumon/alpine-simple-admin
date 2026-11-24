@@ -2,7 +2,7 @@
 import type {AuthUser} from '../types/auth';
 import type {Order,MenuItem,RestaurantTable} from '../types/workspace';
 import type {CashCounter,CashDay,CashMethod} from '../types/simpleCash';
-export interface Catalog {offlineAuthority?:string;canEditUnpaidOrders?:boolean;autoPrintSince?:string;mode?:'assistant';leaseId?:string;id:string;menu:MenuItem[];methods:CashMethod[];tables:RestaurantTable[];halls:{id:string;name:string;floor:string;counterId?:string}[];waiters:{id:string;name:string;phone?:string}[];cashiers?:{id:string;name:string}[];counter:CashCounter;issuedAt:string;expiresAt:string;epoch:number;user:AuthUser;deviceId:string;}
+export interface Catalog {defaultHallId?:string;orderEntryDiscount?:boolean;offlineAuthority?:string;canEditUnpaidOrders?:boolean;autoPrintSince?:string;mode?:'assistant';leaseId?:string;id:string;menu:MenuItem[];methods:CashMethod[];tables:RestaurantTable[];halls:{id:string;name:string;floor:string;counterId?:string}[];waiters:{id:string;name:string;phone?:string}[];cashiers?:{id:string;name:string}[];counter:CashCounter;issuedAt:string;expiresAt:string;epoch:number;user:AuthUser;deviceId:string;}
 export interface SyncReviewSummary {id:string;orderId:string;counterId:string;counterName:string;userName:string;epoch:number;sequence:number;action:Action;reason:string;at:string;status:'pending'|'dismissed'|'restored';externalOrderId?:string;resolvedBy?:string;resolvedAt?:string;resolution?:string;}
 export interface DesktopSyncReview extends SyncReviewSummary {command:DesktopCommand;catalog:Catalog;}
 export interface Snapshot {catalog:Catalog;grant:string;day:CashDay|null;orders:Order[];lastSequence:number;lastHash?:string;serverTime:string;syncReviews?:SyncReviewSummary[];}

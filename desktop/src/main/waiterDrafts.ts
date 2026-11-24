@@ -4,7 +4,7 @@ import {randomUUID} from 'node:crypto';
 import type {Snapshot} from '../../shared/desktop/contracts';
 import {canSetOrderPrice} from '../../shared/utils/orderPricing';
 interface DraftLine {menuId:string;quantity:number;unitPrice?:number;}
-interface DraftData {salesChannel:'dine_in';waiterId:string;table:string;items:DraftLine[];packingCharge:string;customerName:string;customerPhone:string;namedDraftId?:string;namedDraftRevision?:number;}
+interface DraftData {salesChannel:'dine_in';waiterId:string;table:string;items:DraftLine[];packingCharge:string;discount?:string;customerName:string;customerPhone:string;namedDraftId?:string;namedDraftRevision?:number;}
 export interface WaiterDraft {id:string;revision:number;updatedAt:string;data:DraftData;}
 export class WaiterDrafts {
  constructor(private db:DatabaseSync,private context:()=>{scope:string;snapshot:Snapshot}){db.exec('CREATE TABLE IF NOT EXISTS waiter_drafts(id TEXT PRIMARY KEY,scope TEXT NOT NULL,json TEXT NOT NULL)');}
@@ -22,7 +22,8 @@ export class WaiterDrafts {
   if(previous&&(previous.revision!==value.namedDraftRevision||previous.data.waiterId!==value.waiterId))throw Error('This draft changed in another window. Reopen its latest version.');
   if(!previous&&this.list().length>=500)throw Error('Finish or delete old drafts before saving more.');
   const packing=String(value.packingCharge||'0');if(!/^\d+(?:\.\d{1,2})?$/.test(packing)||Number(packing)>10000)throw Error('Check the packing charge.');
-  const row:WaiterDraft={id:previous?.id||randomUUID(),revision:(previous?.revision||0)+1,updatedAt:new Date().toISOString(),data:{salesChannel:'dine_in',waiterId:value.waiterId,table:value.table,items,packingCharge:packing,customerName:String(value.customerName||'').slice(0,100),customerPhone:String(value.customerPhone||'').slice(0,30)}};
+  const discount=String(value.discount||'0'),gross=items.reduce((sum,line)=>sum+Math.round((line.unitPrice??c.menu.find(item=>item.id===line.menuId)?.price??0)*100)*line.quantity,Math.round(Number(packing)*100));if(!/^\d+(?:\.\d{1,2})?$/.test(discount)||!Number.isSafeInteger(Math.round(Number(discount)*100))||Number(discount)>100000000||Math.round(Number(discount)*100)>gross)throw Error('Discount cannot exceed the bill total and must have up to two decimals.');if(Number(discount)>0&&(!c.orderEntryDiscount||c.mode==='assistant'||!c.user.permissions.includes('payments:collect')))throw Error('Connect the updated main counter before applying an order discount.');
+  const row:WaiterDraft={id:previous?.id||randomUUID(),revision:(previous?.revision||0)+1,updatedAt:new Date().toISOString(),data:{salesChannel:'dine_in',waiterId:value.waiterId,table:value.table,items,packingCharge:packing,discount,customerName:String(value.customerName||'').slice(0,100),customerPhone:String(value.customerPhone||'').slice(0,30)}};
   this.db.prepare('INSERT INTO waiter_drafts VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET json=excluded.json').run(row.id,scope,JSON.stringify(row));return row;
  }
  remove(id:string,revision:number){const {scope}=this.current();if(!this.db.prepare('SELECT id FROM waiter_drafts WHERE id=? AND scope=?').get(id,scope))return;const row=this.record(id,scope);if(row.revision!==revision)throw Error('This draft changed. Reopen its latest version.');this.db.prepare('DELETE FROM waiter_drafts WHERE id=? AND scope=?').run(id,scope);}
