@@ -64,6 +64,7 @@
     },
     "asarUnpack": [
       "dist/raw-print.exe"
-    ]
+    ],
+    "afterAllArtifactBuild": "scripts/archive-artifacts.cjs"
   }
 }

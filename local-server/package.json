@@ -71,6 +71,7 @@
     },
     "asarUnpack": [
       "dist/server-process-host.exe"
-    ]
+    ],
+    "afterAllArtifactBuild": "scripts/archive-artifacts.cjs"
   }
 }
