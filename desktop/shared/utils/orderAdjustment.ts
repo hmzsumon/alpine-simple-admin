@@ -5,6 +5,7 @@ import type {AuthUser} from '../types/auth';
 import {ApiError} from './ApiError';
 import {isRecord} from './authValidation';
 import {canSetOrderPrice} from './orderPricing';
+import {isOrderQuantity} from './orderQuantity';
 import {billCents,cents,grossBillCents,paidCents,text} from './simpleCash';
 export const orderFingerprint=(order:Order)=>createHash('sha256').update(JSON.stringify(order)).digest('hex');
 export function adjustOrder(original:Order,input:Record<string,unknown>,menu:MenuItem[],actor:AuthUser,at:string,cancel=false,ids?:{adjustment:string;refund:string}):Order{
@@ -16,7 +17,7 @@ export function adjustOrder(original:Order,input:Record<string,unknown>,menu:Men
   if(!Array.isArray(input.items)||!input.items.length||input.items.length>80)throw new ApiError(400,'Keep at least one item, or cancel the order.');
   const seen=new Set<number>();
   order.items=input.items.map(value=>{
-   if(!isRecord(value)||typeof value.menuId!=='string'||!Number.isInteger(value.quantity)||Number(value.quantity)<1||Number(value.quantity)>99)throw new ApiError(400,'Enter valid items and quantities (1–99).');
+   if(!isRecord(value)||typeof value.menuId!=='string'||!isOrderQuantity(value.quantity))throw new ApiError(400,'Quantity must be a positive whole number.');
    let old:Order['items'][number]|undefined;
    if(value.lineIndex!==undefined){if(!Number.isInteger(value.lineIndex)||seen.has(Number(value.lineIndex)))throw new ApiError(400,'Invalid original item reference.');seen.add(Number(value.lineIndex));old=original.items[Number(value.lineIndex)];if(!old||old.menuId!==value.menuId)throw new ApiError(409,'Original item changed.');}
    const item=menu.find(m=>m.id===value.menuId);

@@ -1,5 +1,6 @@
 /* ────────── pure financial rules: sales, physical cash and platform receivables never mix ────────── */
 import {ApiError} from "./ApiError";
+import {isOrderQuantity} from './orderQuantity';
 import type {Order} from "../types/workspace";
 import type {Allocation,CashDay,CashMethod,CashMovement,CashHandover} from "../types/simpleCash";
 export const today=()=>new Date(Date.now()+21600000).toISOString().slice(0,10);
@@ -7,7 +8,7 @@ export function cents(value:unknown,allowZero=true):number {
   if((typeof value!=="number"&&typeof value!=="string")||!/^\d+(?:\.\d{1,2})?$/.test(String(value))||!Number.isFinite(Number(value)))throw new ApiError(400,"টাকার পরিমাণ দিন, সর্বোচ্চ দুই দশমিক পর্যন্ত।");
   const n=Math.round(Number(value)*100);if(!Number.isSafeInteger(n)||n>10000000000||n<(allowZero?0:1))throw new ApiError(400,"টাকার পরিমাণ সঠিক নয়।");return n;
 }
-export const grossBillCents=(o:Order)=>o.items.reduce((s,l)=>s+cents(l.price)*l.quantity,0)+cents(o.packingCharge||0);
+export const grossBillCents=(o:Order)=>o.items.reduce((sum,line)=>{if(!isOrderQuantity(line.quantity))throw new ApiError(400,'Quantity must be a positive whole number.');const next=sum+cents(line.price)*line.quantity;if(!Number.isSafeInteger(next))throw new ApiError(400,'Order total is too large to calculate accurately. Reduce the quantity.');return next;},cents(o.packingCharge||0));
 export const billCents=(o:Order)=>Math.max(0,grossBillCents(o)-(o.discountCents||0));
 export const paidCents=(o:Order)=>(o.payments||[]).reduce((s,p)=>s+p.totalCents,0);
 export const dueCents=(o:Order)=>Math.max(0,billCents(o)-paidCents(o));

@@ -8,14 +8,17 @@ import {adjustOrder} from '../utils/orderAdjustment';
 import {correctPaymentMethod} from '../utils/paymentCorrection';
 import {isRecord} from '../utils/authValidation';
 import {canSetOrderPrice} from '../utils/orderPricing';
+import {isOrderQuantity} from '../utils/orderQuantity';
+import type {AuthUser} from '../types/auth';
 export const canonical=(value:unknown):string=>Array.isArray(value)?'['+value.map(canonical).join(',')+']':isRecord(value)?'{'+Object.keys(value).filter(k=>value[k]!==undefined&&k!=='_id').sort().map(k=>JSON.stringify(k)+':'+canonical(value[k])).join(',')+'}':JSON.stringify(value)??'null';
 export const fingerprint=(value:unknown)=>createHash('sha256').update(canonical(value)).digest('hex');
 // Printer acknowledgements must not make an otherwise unchanged bill stale.
 export const billFingerprint=(order:Order|undefined)=>order?fingerprint({...order,handoffPrintClaim:undefined,handoffPrintId:undefined}):fingerprint(order);
 export const businessDate=(at:string)=>new Date(Date.parse(at)+21600000).toISOString().slice(0,10);
-export function applyCommand(original:Snapshot,event:DesktopCommand):Snapshot {
- const state=JSON.parse(JSON.stringify(original)) as Snapshot,c=state.catalog,user=c.user,body=event.data,at=event.at;
- const need=(p:string)=>{if(!user.permissions.includes(p as never))throw new ApiError(403,'Permission required: '+p);};
+export function applyCommand(original:Snapshot,event:DesktopCommand,operator?:AuthUser):Snapshot {
+ const state=JSON.parse(JSON.stringify(original)) as Snapshot,c=state.catalog,user=operator||c.user,body=event.data,at=event.at;
+ const need=(p:string)=>{if(!user.permissions.includes(p as never)||!c.user.permissions.includes(p as never))throw new ApiError(403,'Permission required: '+p);};
+ if(operator&&(!event.operatorPermit||!['create','pay','edit','cancel','correct'].includes(event.action)))throw new ApiError(403,'Switch to the responsible cashier for cash-day or custody changes.');
  if(event.protocol!==1||!/^[-a-f0-9]{36}$/i.test(event.id)||event.deviceId!==c.deviceId||event.counterId!==c.counter.id||event.epoch!==c.epoch||event.catalogId!==c.id||event.sequence!==state.lastSequence+1||!isRecord(body)||!Number.isFinite(Date.parse(at)))throw new ApiError(409,'Invalid or out-of-sequence desktop command.');
  if(Date.parse(at)<Date.parse(c.issuedAt)-300000||Date.parse(at)>Date.parse(c.expiresAt))throw new ApiError(401,'This offline session has expired. Connect and sign in again.');
  need('cash:operate');let day=state.day;
@@ -24,7 +27,7 @@ export function applyCommand(original:Snapshot,event:DesktopCommand):Snapshot {
   if(state.orders.some(o=>o.bookingState!=='booking'&&!['Paid','Cancelled'].includes(o.status)))throw new ApiError(409,'Settle previous orders before opening a day.');
   day={id:businessDate(at),counterId:c.counter.id,counterName:c.counter.name,counterCode:c.counter.code,openedAt:at,openedBy:user.name,openingCents:cents(body.amount),openingCustodianId:user.id,openingCustodianName:user.name,custodianId:user.id,custodianName:user.name,sequence:0,orderSequence:0,movements:[],handovers:[],commands:[]};state.orders=[];
  }else{
-  if(!day)throw new ApiError(409,'Open the cash day first.');canOperate(day,user);
+  if(!day)throw new ApiError(409,'Open the cash day first.');canOperate(day,c.user);
   if(event.action==='create'){
    need('orders:create');if(state.orders.length>=5000)throw new ApiError(409,'Close the day before accepting more orders.');
    const channel=body.salesChannel;if(!['dine_in','takeaway','foodpanda'].includes(String(channel)))throw new ApiError(400,'Select an order channel.');if(channel!=='dine_in')need('orders:parcel');
@@ -32,7 +35,7 @@ export function applyCommand(original:Snapshot,event:DesktopCommand):Snapshot {
    const waiter=body.waiterId?c.waiters.find(w=>w.id===body.waiterId):undefined;if(body.waiterId&&!waiter)throw new ApiError(400,'Select an available waiter.');
    if(!Array.isArray(body.items)||!body.items.length||body.items.length>80)throw new ApiError(400,'Select 1–80 items.');
    const items:Order['items']=body.items.map(v=>{
-    if(!isRecord(v)||!Number.isInteger(v.quantity)||Number(v.quantity)<1||Number(v.quantity)>99)throw new ApiError(400,'Enter quantities from 1 to 99.');
+    if(!isRecord(v)||!isOrderQuantity(v.quantity))throw new ApiError(400,'Quantity must be a positive whole number.');
     const item=c.menu.find(m=>m.id===v.menuId&&m.active);if(!item)throw new ApiError(409,'Selected item is unavailable.');
     if(v.unitPrice!==undefined&&!canSetOrderPrice(item))throw new ApiError(403,'Only Fish and items ending in Dish / ডিশ prices can be overridden.');
     if(body.localWaiter&&v.unitPrice===undefined&&v.expectedPrice!==undefined&&v.expectedPrice!==item.price)throw new ApiError(409,'Menu price changed. Refresh before sending.');
@@ -46,7 +49,7 @@ export function applyCommand(original:Snapshot,event:DesktopCommand):Snapshot {
    const seq=String(event.sequence).padStart(5,'0'),prefix='D-'+day.id.replace(/-/g,'')+'-'+c.counter.code+'-'+c.deviceId.slice(0,6)+'-'+seq;
    const order:Order={adjustments:[],id:'DS-'+event.id,table:channel==='dine_in'?table!.id:'PARCEL',...(channel==='dine_in'?{hallId:hall!.id,hallName:hall!.name,tableName:table!.name,floorName:table!.floor}:{}),createdBy:waiter?.id||user.id,waiter:waiter?.name||user.name,...(waiter?{enteredBy:user.id,enteredByName:user.name}:{}),createdAt:at,finalizedAt:at,status:'New',paymentStatus:'unpaid',salesChannel:channel as Order['salesChannel'],orderType:channel==='dine_in'?'dine_in':'takeaway',externalOrderId:external,packingCharge:packing/100,customerName:typeof body.customerName==='string'?body.customerName.trim().slice(0,100):'',customerPhone:typeof body.customerPhone==='string'?body.customerPhone.trim().slice(0,30):'',items,payments:[],simpleDayId:day.id,simpleCounterId:c.counter.id,simpleCounterName:c.counter.name,simpleBillNo:prefix,...(channel!=='dine_in'?{parcelToken:(channel==='foodpanda'?'FP-':'P-')+c.deviceId.slice(0,4)+'-'+seq}:{}),handoffPrintId:event.id,handoffPrintClaim:{by:user.id,at,deviceId:c.deviceId}};
    if(body.localWaiter){if(!waiter)throw new ApiError(403,'Local waiter is unavailable.');order.bookingState='final';order.note=typeof body.note==='string'?body.note.slice(0,1000):'';}
-   state.orders.unshift(order);day.orderSequence++;
+   grossBillCents(order);state.orders.unshift(order);day.orderSequence++;
   }else if(['pay','edit','cancel','correct'].includes(event.action)){
    const i=state.orders.findIndex(o=>o.id===event.orderId&&o.simpleDayId===day!.id&&(o.simpleCounterId||'main')===c.counter.id);if(i<0)throw new ApiError(404,'Bill not found in this cash day.');let o=state.orders[i];
    if(billFingerprint(o)!==event.before)throw new ApiError(409,'This bill changed on another device. Keep the local transaction and resolve it before syncing.');
