@@ -1,3 +1,4 @@
+import {stationRows} from '@/utils/stationSetup';
 import {categoryName,sameCategory} from "@/utils/categoryItems";
 import {createReadQueue,reconcileCollections} from "@/utils/readQueue";
 /* ────────── imports ────────── */
@@ -8,7 +9,7 @@ import { initialData } from "@/data/menu";
 import { loadWorkspace, persistWorkspace } from "@/lib/adminWorkspace";
 import { total, paidOrder } from "@/utils/format";
 import type { AppData, MenuItem, Order } from "@/types";
-import { defaultTables, defaultKitchens } from "@/config/restaurantSetup";
+import { defaultTables } from "@/config/restaurantSetup";
 import { matchesMenuSearch, normalizeItemCode } from "@/utils/menuSearch";
 
 const dayFormat = new Intl.DateTimeFormat("en-CA", {timeZone:"Asia/Dhaka"});
@@ -22,7 +23,7 @@ export function useAdminWorkspace() {
 
   const [data, setData] = useState<AppData>(initialData);
   const tables = data.tables ?? defaultTables;
-  const kitchens = data.kitchens ?? defaultKitchens;
+  const kitchens = stationRows(data);
   const stationName = (id: string) => kitchens.find((k) => k.id === id)?.name || id;
   const [orderEpoch,setOrderEpoch]=useState(0);
   const [revision, setRevision] = useState(0);

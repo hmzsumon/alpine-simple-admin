@@ -1,5 +1,6 @@
 /* ── Component: receipt preview and browser printing; never changes payment or order state ── */
 "use client";
+import SendStationOrder from './SendStationOrder';
 import {hasKitchenCopy} from '@/utils/kitchenPrinting';
 import KitchenCopy from '@/components/orders/KitchenCopy';
 import {paymentMethodBalances} from '@/utils/paymentBalances';
@@ -23,9 +24,9 @@ export default function PrintableBill({ order, printedBy, previewAt,paper="therm
     <nav className="bill-preview-toolbar" aria-label="Bill preview">
       <Link href="/orders"><ArrowLeft size={17} />Back to orders</Link>
       <button type="button" onClick={() => router.refresh()}><RefreshCw size={16} />Refresh</button>
-      <button type="button" className="bill-print-button" onClick={() => printBill(order.id)}><Printer size={17}/>{hasKitchenCopy(order)?"Print bill + kitchen":"Print bill"}</button>{hasKitchenCopy(order)&&!cancelled&&<button type="button" onClick={()=>printBill(order.id,undefined,"kitchen")}>Kitchen only</button>}{paper==="thermal"&&<button type="button" onClick={()=>printDocument(true)}>Compact PDF</button>}
+      <button type="button" className="bill-print-button" onClick={() => printBill(order.id)}><Printer size={17}/>Print bill</button>{!cancelled&&<SendStationOrder orderId={order.id}/>}{paper==="thermal"&&<button type="button" onClick={()=>printDocument(true)}>Compact PDF</button>}
     </nav>
-    <p className="bill-preview-help">{paper==="a4"?"A4 bill preview.":"80mm counter receipt preview."} Choose Print for the printer, or Compact PDF and Save as PDF. Turn off Headers and footers; use 100% scale and the shortest suitable roll paper size. The customer bill and selected Bengali kitchen copy print separately. Parcel tokens and tea-only slips are disabled. Enable Full cut / Cut after document in the printer driver. Printing does not change payment status.</p>
+    <p className="bill-preview-help">{paper==="a4"?"A4 bill preview.":"80mm counter receipt preview."} Choose Print for the printer, or Compact PDF and Save as PDF. Turn off Headers and footers; use 100% scale and the shortest suitable roll paper size. Use Send to kitchen on the saved order for separate Bengali station copies on its counter printer. Parcel tokens and tea-only slips are disabled. Enable Full cut / Cut after document in the printer driver. Printing does not change payment status.</p>
     <p className="bill-preview-help"><a href="/printer-setup/ENABLE-ALPINE-AUTOCUT.ps1" download>Windows auto-cut setup</a> · <a href="/guide/printing">Printer setup guide</a></p>
     <article data-print-part={printPart} className="bill-receipt" aria-label="Customer bill">
       {(printPart==="preview"||printPart==="bill")&&<>
@@ -50,7 +51,7 @@ export default function PrintableBill({ order, printedBy, previewAt,paper="therm
       {!!order.payments?.length&&<div className="bill-payment">{paymentMethodBalances(order.payments).map(a=><p className="cash-slip-row" key={a.methodId+"|"+a.kind}><span>{a.name}</span><strong>{taka(a.cents)}</strong></p>)}{!order.payments.some(p=>p.correction&&(p.correction.from.kind==="cash"||p.correction.to.kind==="cash"))&&order.payments.some(p=>p.tenderedCashCents!==undefined)?<><p className="cash-slip-row"><span>Customer paid (cash)</span><strong>{taka(order.payments.reduce((sum,p)=>sum+(p.tenderedCashCents??p.allocations.filter(a=>a.kind==="cash").reduce((n,a)=>n+a.cents,0)),0))}</strong></p><p className="cash-slip-row"><span>Change returned</span><strong>{taka(order.payments.reduce((sum,p)=>sum+(p.changeCents||0),0))}</strong></p></>:null}</div>}
       {!!order.payments?.some(p=>p.correction)&&<p className="cash-slip-row"><span>Payment method corrected</span></p>}{!!order.payments?.some(p=>p.refund)&&<p className="cash-slip-row"><span>Customer refunded</span><strong>{taka(-(order.payments||[]).filter(p=>p.refund).reduce((s,p)=>s+p.totalCents,0))}</strong></p>}
       </>}
-      {(printPart==="preview"||printPart==="kitchen")&&hasKitchenCopy(order)&&!cancelled&&<KitchenCopy order={order}/>}
+      {printPart==="kitchen"&&hasKitchenCopy(order)&&!cancelled&&<KitchenCopy order={order}/>}
     </article>
   </main>;
 }

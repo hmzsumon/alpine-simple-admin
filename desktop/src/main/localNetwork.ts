@@ -28,6 +28,7 @@ export class LocalNetwork {
    res.statusCode=401;const actor=await this.options.call('localAuth',{hash:localHash(bearer)});res.statusCode=200;let result;
    if(isGet&&path==='/api/waiter/bootstrap')result=await this.options.call('localBootstrap',{actor});
    else if(isGet&&/^\/api\/waiter\/orders\/[^/]+$/.test(path))result=await this.options.call('localReceipt',{actor,id:decodeURIComponent(path.split('/').at(-1)!)});
+   else if(!isGet&&/^\/api\/waiter\/orders\/[^/]+\/kitchen$/.test(path)){result=await this.options.call('localStationSend',{actor,id:decodeURIComponent(path.split('/').at(-2)!),body});this.notify();}
    else if(!isGet&&(/^\/api\/waiter\/orders$/.test(path)||/^\/api\/waiter\/orders\/[^/]+\/items$/.test(path))){result=await this.options.call('localSubmit',{actor,path,body});this.notify();}
    else throw Error('This action needs the online restaurant server.');
    res.end(JSON.stringify(result));

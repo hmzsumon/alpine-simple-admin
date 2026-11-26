@@ -43,7 +43,7 @@ export default function MenuItemForm() {
           nameBn: String(f.get("nameBn")).trim(),
           aliases: [...new Set(String(f.get("aliases") || "").split(/[,，\n]/).map(s => s.trim()).filter(Boolean))],
           category: String(f.get("category")).trim(),
-          kitchenCopy: f.get("kitchenCopy") === "on",
+          kitchenCopy: editing?.kitchenCopy,
           station: f.get("station") as Station,
           price,
           active: f.get("active") === "on",
@@ -117,8 +117,8 @@ export default function MenuItemForm() {
           />
         </label>
       </div>
-      <label hidden>
-        Internal catalog group
+      <label>
+        প্রস্তুতির স্টেশন
         <SearchableSelect
           name="station"
           defaultValue={editing?.station || kitchens[0]?.id || ""}
@@ -140,7 +140,7 @@ export default function MenuItemForm() {
         />{" "}
         Available for ordering
       </label>
-      <label className="check-label"><input type="checkbox" name="kitchenCopy" defaultChecked={editing?.kitchenCopy === true}/>Include in the Bengali kitchen copy</label>
+
       <button disabled={busy || uploading} className="primary" type="submit">
         {busy ? "Saving…" : "Save item"}
       </button>

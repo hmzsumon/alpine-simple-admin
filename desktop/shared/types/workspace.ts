@@ -2,7 +2,7 @@
 import type { Inventory, StockAvailability } from "./inventory";
 export type Station = string;
 export type RestaurantTable = { id: string; name: string; floor: string; hallId?: string; seats: number };
-export type Kitchen = { id: string; name: string; floor: string };
+export type Kitchen = { id: string; name: string; nameBn?:string; floor: string };
 export type MenuItem = {
   aliases?: string[];
   code?: string;
@@ -19,7 +19,7 @@ export type MenuItem = {
   active: boolean;
   note?: string;
 };
-export type Order = { note?:string; handoffPrintId?:string;finalizedAt?:string;handoffPrintClaim?:{by:string;at:string;deviceId:string};adjustments?:{id:string;at:string;by:string;byName:string;reason:string;cancel:boolean;refundedCents:number;before:{items:Order["items"];discountCents:number;status:string};after:{items:Order["items"];discountCents:number;totalCents:number}}[]; bookingState?:"booking"|"final";bookingRevision?:number;
+export type Order = { kitchenOrderId?:string;kitchenVersion?:string; note?:string; handoffPrintId?:string;finalizedAt?:string;handoffPrintClaim?:{by:string;at:string;deviceId:string};adjustments?:{id:string;at:string;by:string;byName:string;reason:string;cancel:boolean;refundedCents:number;before:{items:Order["items"];discountCents:number;status:string};after:{items:Order["items"];discountCents:number;totalCents:number}}[]; bookingState?:"booking"|"final";bookingRevision?:number;
   floorName?:string; hallId?:string; hallName?:string;tableName?:string;
   simpleDayId?:string;simpleCounterId?:string;simpleCounterName?:string; salesChannel?:"dine_in"|"takeaway"|"foodpanda";externalOrderId?:string;simpleBillNo?:string;payments?:import("./simpleCash").BillPayment[];
   orderType?: "dine_in" | "takeaway";

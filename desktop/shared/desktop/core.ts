@@ -1,4 +1,5 @@
 /* ── Deterministic, shared money rules: accepted writes never wait for the network ── */
+import {kitchenContent} from '../utils/stationTickets';
 import {createHash} from 'node:crypto';
 import type {Snapshot,DesktopCommand} from './contracts';
 import type {Order} from '../types/workspace';
@@ -13,7 +14,8 @@ import type {AuthUser} from '../types/auth';
 export const canonical=(value:unknown):string=>Array.isArray(value)?'['+value.map(canonical).join(',')+']':isRecord(value)?'{'+Object.keys(value).filter(k=>value[k]!==undefined&&k!=='_id').sort().map(k=>JSON.stringify(k)+':'+canonical(value[k])).join(',')+'}':JSON.stringify(value)??'null';
 export const fingerprint=(value:unknown)=>createHash('sha256').update(canonical(value)).digest('hex');
 // Printer acknowledgements must not make an otherwise unchanged bill stale.
-export const billFingerprint=(order:Order|undefined)=>order?fingerprint({...order,handoffPrintClaim:undefined,handoffPrintId:undefined}):fingerprint(order);
+export const billFingerprint=(order:Order|undefined)=>order?fingerprint({...order,kitchenVersion:undefined,handoffPrintClaim:undefined,handoffPrintId:undefined}):fingerprint(order);
+const legacyPrintFingerprint=(order:Order)=>fingerprint({...order,handoffPrintClaim:undefined,handoffPrintId:undefined});
 export const businessDate=(at:string)=>new Date(Date.parse(at)+21600000).toISOString().slice(0,10);
 export function applyCommand(original:Snapshot,event:DesktopCommand,operator?:AuthUser):Snapshot {
  const state=JSON.parse(JSON.stringify(original)) as Snapshot,c=state.catalog,user=operator||c.user,body=event.data,at=event.at;
@@ -47,14 +49,15 @@ export function applyCommand(original:Snapshot,event:DesktopCommand,operator?:Au
    const external:string|undefined=undefined;
 
    const seq=String(event.sequence).padStart(5,'0'),prefix='D-'+day.id.replace(/-/g,'')+'-'+c.counter.code+'-'+c.deviceId.slice(0,6)+'-'+seq;
-   const order:Order={adjustments:[],id:'DS-'+event.id,table:channel==='dine_in'?table!.id:'PARCEL',...(channel==='dine_in'?{hallId:hall!.id,hallName:hall!.name,tableName:table!.name,floorName:table!.floor}:{}),createdBy:waiter?.id||user.id,waiter:waiter?.name||user.name,...(waiter?{enteredBy:user.id,enteredByName:user.name}:{}),createdAt:at,finalizedAt:at,status:'New',paymentStatus:'unpaid',salesChannel:channel as Order['salesChannel'],orderType:channel==='dine_in'?'dine_in':'takeaway',externalOrderId:external,packingCharge:packing/100,customerName:typeof body.customerName==='string'?body.customerName.trim().slice(0,100):'',customerPhone:typeof body.customerPhone==='string'?body.customerPhone.trim().slice(0,30):'',items,payments:[],simpleDayId:day.id,simpleCounterId:c.counter.id,simpleCounterName:c.counter.name,simpleBillNo:prefix,...(channel!=='dine_in'?{parcelToken:(channel==='foodpanda'?'FP-':'P-')+c.deviceId.slice(0,4)+'-'+seq}:{}),handoffPrintId:event.id,handoffPrintClaim:{by:user.id,at,deviceId:c.deviceId}};
+   const order:Order={...(c.stationDispatch?{kitchenVersion:body.localWaiter&&typeof body.localKitchenVersion==='string'&&/^[a-f0-9-]{36}$/i.test(body.localKitchenVersion)?body.localKitchenVersion:event.id}:{}),...(body.localWaiter&&typeof body.kitchenOrderId==='string'&&/^LB-[a-f0-9-]{36}$/i.test(body.kitchenOrderId)?{kitchenOrderId:body.kitchenOrderId}:{}),adjustments:[],id:'DS-'+event.id,table:channel==='dine_in'?table!.id:'PARCEL',...(channel==='dine_in'?{hallId:hall!.id,hallName:hall!.name,tableName:table!.name,floorName:table!.floor}:{}),createdBy:waiter?.id||user.id,waiter:waiter?.name||user.name,...(waiter?{enteredBy:user.id,enteredByName:user.name}:{}),createdAt:at,finalizedAt:at,status:'New',paymentStatus:'unpaid',salesChannel:channel as Order['salesChannel'],orderType:channel==='dine_in'?'dine_in':'takeaway',externalOrderId:external,packingCharge:packing/100,customerName:typeof body.customerName==='string'?body.customerName.trim().slice(0,100):'',customerPhone:typeof body.customerPhone==='string'?body.customerPhone.trim().slice(0,30):'',items,payments:[],simpleDayId:day.id,simpleCounterId:c.counter.id,simpleCounterName:c.counter.name,simpleBillNo:prefix,...(channel!=='dine_in'?{parcelToken:(channel==='foodpanda'?'FP-':'P-')+c.deviceId.slice(0,4)+'-'+seq}:{}),handoffPrintId:event.id,handoffPrintClaim:{by:user.id,at,deviceId:c.deviceId}};
    if(body.localWaiter){if(!waiter)throw new ApiError(403,'Local waiter is unavailable.');order.bookingState='final';order.note=typeof body.note==='string'?body.note.slice(0,1000):'';}
    const gross=grossBillCents(order),discount=body.discount===undefined?0:cents(body.discount);
    if(discount){if(body.localWaiter)throw new ApiError(403,'Only the cashier can apply an order discount.');need('payments:collect');if(!c.orderEntryDiscount)throw new ApiError(409,'Update the restaurant server and sync before applying an order discount.');if(discount>gross)throw new ApiError(400,'Discount cannot exceed the bill total.');order.discountCents=discount;order.discountBy=user.id;order.discountByName=user.name;order.discountAt=at;if(discount===gross){order.status='Paid';order.paymentStatus='paid';order.paidAt=at;order.paidBy=user.id;order.deliveredAt=at;}}
    state.orders.unshift(order);day.orderSequence++;
   }else if(['pay','edit','cancel','correct'].includes(event.action)){
    const i=state.orders.findIndex(o=>o.id===event.orderId&&o.simpleDayId===day!.id&&(o.simpleCounterId||'main')===c.counter.id);if(i<0)throw new ApiError(404,'Bill not found in this cash day.');let o=state.orders[i];
-   if(billFingerprint(o)!==event.before&&billFingerprint({...o,items:o.items.map(({kitchenCopy,...line})=>line)})!==event.before)throw new ApiError(409,'This bill changed on another device. Keep the local transaction and resolve it before syncing.');
+   const oldLines={...o,items:o.items.map(({kitchenCopy,...line})=>line)};
+   if(![billFingerprint(o),billFingerprint(oldLines),legacyPrintFingerprint(o),legacyPrintFingerprint(oldLines)].includes(String(event.before)))throw new ApiError(409,'This bill changed on another device. Keep the local transaction and resolve it before syncing.');
    if(o.bookingState==='booking'||o.status==='Cancelled')throw new ApiError(409,'Only confirmed, non-cancelled bills can be changed.');
    if(event.action==='pay'){
     need('payments:collect');if(!dueCents(o))throw new ApiError(409,'Bill is already paid.');
@@ -68,7 +71,7 @@ export function applyCommand(original:Snapshot,event:DesktopCommand,operator?:Au
    }else if(event.action==='correct'){
     need('payments:collect');o=correctPaymentMethod(o,{...body,fingerprint:requireFingerprint(o)},c.methods,user,at,event.id);
    }else{
-    need(event.action==='edit'?'orders:update':'orders:cancel');o=adjustOrder(o,{...body,fingerprint:requireFingerprint(o)},c.menu,user,at,event.action==='cancel',{adjustment:event.id,refund:event.id});
+    need(event.action==='edit'?'orders:update':'orders:cancel');const previousKitchen=kitchenContent(o);o=adjustOrder(o,{...body,fingerprint:requireFingerprint(o)},c.menu,user,at,event.action==='cancel',{adjustment:event.id,refund:event.id});if(c.stationDispatch&&kitchenContent(o)!==previousKitchen)o.kitchenVersion=event.id;
    }
    state.orders[i]=o;if(dayReport(day,state.orders).expectedCash<0)throw new ApiError(409,'Not enough cash for this refund or correction.');
   }else if(event.action==='movement'){

@@ -1,3 +1,4 @@
+import type {StationPrintOrder} from '../../shared/utils/stationTickets';
 import {orderPrintTime} from '../../../utils/orderPrintTime';
 import {kitchenItems,kitchenTotal,bengaliNumber,bengaliMoney,kitchenTime} from '../../../utils/kitchenPrinting';
 /* ── Clean local font layout shared by thermal graphics and the Windows fallback ── */
@@ -12,7 +13,8 @@ export function receipt(order:Order,part:PrintPart){
  let body='';
  if(part==='token')body='<header><b>ALPINE · CUSTOMER PARCEL TOKEN</b></header><div class="token">'+escape(order.parcelToken)+'</div><p style="text-align:center">'+escape(order.simpleBillNo)+'</p><p style="text-align:center">'+escape(order.simpleCounterName)+'</p>'+row('Total (BDT)',money(billCents(order)),'total');
  else if(part==='kitchen'){
-  body='<header><b>আলপাইন রেস্টুরেন্ট · কিচেন কপি</b></header><p>বিল: '+escape(order.simpleBillNo||order.id)+'</p><p>ওয়েটার: '+escape(order.waiter)+'</p><p>তারিখ ও সময়: '+escape(kitchenTime(order.createdAt))+'</p><table><thead><tr><th>আইটেমের নাম</th><th style="width:22%">দর</th><th style="width:12%">পরিমাণ</th><th style="width:26%">টাকা</th></tr></thead><tbody>'+kitchenItems(order).map((line,index)=>'<tr><td>'+escape(bengaliNumber(index+1)+'. '+(line.nameBn||line.name))+'</td><td>'+escape(bengaliMoney(Math.round(line.price*100)))+'</td><td>'+escape(bengaliNumber(line.quantity))+'</td><td>'+escape(bengaliMoney(Math.round(line.price*100)*line.quantity))+'</td></tr>').join('')+'</tbody></table>'+row('কিচেনের আইটেম মোট (টাকা)',bengaliMoney(kitchenTotal(order)),'total');
+  const station=(order as StationPrintOrder).stationTicket;
+  body='<header><b>আলপাইন রেস্টুরেন্ট · কিচেন কপি</b> '+(station?'<p><b>'+escape(station.nameBn)+'</b></p>':'')+'</header>'+(station?.cancelled?'<p><b>এই স্টেশনের অর্ডার বাতিল</b></p>':station?.revised?'<p><b>সংশোধিত অর্ডার — আগের কপির পরিবর্তে</b></p>':'')+'<p>বিল: '+escape(order.simpleBillNo||order.id)+'</p><p>ওয়েটার: '+escape(order.waiter)+'</p><p>তারিখ ও সময়: '+escape(kitchenTime(station?.requestedAt||order.createdAt))+'</p><table><thead><tr><th>আইটেমের নাম</th><th style="width:22%">দর</th><th style="width:12%">পরিমাণ</th><th style="width:26%">টাকা</th></tr></thead><tbody>'+kitchenItems(order).map((line,index)=>'<tr><td>'+escape(bengaliNumber(index+1)+'. '+(line.nameBn||line.name))+'</td><td>'+escape(bengaliMoney(Math.round(line.price*100)))+'</td><td>'+escape(bengaliNumber(line.quantity))+'</td><td>'+escape(bengaliMoney(Math.round(line.price*100)*line.quantity))+'</td></tr>').join('')+'</tbody></table>'+row('স্টেশনের মোট (টাকা)',bengaliMoney(kitchenTotal(order)),'total');
  }
  else{
   const type=order.salesChannel==='foodpanda'?'Foodpanda':order.orderType==='takeaway'?'Parcel':'Dine-in',sale=order.items.reduce((n,l)=>n+Math.round(l.price*100)*l.quantity,0);
