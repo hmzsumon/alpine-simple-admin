@@ -3,15 +3,16 @@
 
 /* ────────── imports ────────── */
 import { useAdminContext } from "@/context/AdminContext";
-import { Bell, ChevronRight, Menu } from "lucide-react";
+import { Bell, ChevronRight, Menu,PanelLeftClose,PanelLeftOpen } from "lucide-react";
 
 export default function AdminHeader() {
   /* ────────── workspace state ────────── */
-  const { page, data, setNotice, setDrawer, active } = useAdminContext();
+  const { page, data, setNotice, setDrawer, active,sidebarCollapsed,toggleSidebar } = useAdminContext();
 
   return (
     <header className="topbar">
       <div className="breadcrumb">
+        <button className="desktop-sidebar-toggle icon-button" aria-label={sidebarCollapsed?"Expand sidebar":"Collapse sidebar"} aria-expanded={!sidebarCollapsed} onClick={toggleSidebar}>{sidebarCollapsed?<PanelLeftOpen size={20}/>:<PanelLeftClose size={20}/>}</button>
         <button
           className="mobile-toggle icon-button"
           aria-label="Open navigation"

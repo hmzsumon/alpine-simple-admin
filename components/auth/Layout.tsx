@@ -13,9 +13,9 @@ import { useAdminContext } from "@/context/AdminContext";
 
 /* ────────── dashboard layout ────────── */
 export default function DashboardShell({ children }: { children: ReactNode }) {
-  const { drawer, setDrawer } = useAdminContext();
+  const { drawer, setDrawer,sidebarCollapsed } = useAdminContext();
   return (
-    <div className="admin-shell">
+    <div className={`admin-shell${sidebarCollapsed?" sidebar-collapsed":""}`}>
       <AdminSidebar />
       {drawer && (
         <button

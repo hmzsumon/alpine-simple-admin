@@ -1,6 +1,6 @@
 {
   "name": "alpine-local-server",
-  "version": "1.1.13",
+  "version": "1.1.14",
   "private": true,
   "description": "SQLite LAN server for the existing Alpine Counter, Waiter and Admin apps",
   "author": "Alpine Restaurant",
@@ -59,7 +59,7 @@
         }
       ],
       "artifactName": "Alpine-Local-Server-${version}-Windows-x64.${ext}",
-      "icon": "../public/alpine-brand.png"
+      "icon": "../public/app-icons/server/icon.ico"
     },
     "nsis": {
       "oneClick": false,

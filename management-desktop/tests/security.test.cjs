@@ -5,7 +5,7 @@ test('remote business pages cannot acquire launcher/native capabilities',()=>{
  assert.deepEqual(config.app.security.capabilities,['launcher']);
  const cap=JSON.parse(fs.readFileSync(path.join(root,'src-tauri/capabilities/launcher.json'),'utf8'));
  assert.equal(cap.local,true);assert.equal(cap.remote,undefined);assert.deepEqual(cap.windows,['main']);
- assert.deepEqual(cap.permissions,['core:default','allow-open-workspace']);
+ assert.deepEqual(cap.permissions,['core:default','allow-open-workspace','allow-detect-local-server']);
  const build=fs.readFileSync(path.join(root,'src-tauri/build.rs'),'utf8');assert.match(build,/AppManifest::new\(\)\.commands/);
  assert.equal(config.bundle.windows.webviewInstallMode.type,'offlineInstaller');
 });

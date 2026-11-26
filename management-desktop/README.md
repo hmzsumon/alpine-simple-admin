@@ -5,7 +5,7 @@ Separate Windows application, application ID `com.alpine.restaurant.management`.
 ## Connections
 
 - Cloud: `https://alpine-simple-admin.vercel.app` (internet required).
-- On the restaurant Server PC: `http://127.0.0.1:4251` with Alpine Local Server running. Local Admin currently binds to loopback, so it is available on that PC only. Do not enter Counter/Waiter API port 4250. This release does not change server bindings or firewall rules.
+- On the restaurant Server PC: a running Alpine Local Server is detected at `http://localhost:4251` and selected automatically before connecting. The user can still choose Cloud or edit the address under Advanced connection. Local Admin currently binds to loopback, so it is available on that PC only. Do not enter Counter/Waiter API port 4250. This release does not change server bindings or firewall rules.
 - Server-PC Admin can work without internet against the running local service. This is not an independent offline database; server downtime still makes management screens unavailable. Counter's independent order capture remains separate.
 - The app never automatically switches between cloud and local databases. Close the current workspace to select another origin; this avoids losing unsaved work or accidentally writing to another restaurant data source.
 

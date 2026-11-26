@@ -37,6 +37,9 @@ export function useAdminWorkspace() {
   const [category, setCategory] = useState("All categories");
 
   const [drawer, setDrawer] = useState(false);
+  const [sidebarCollapsed,setSidebarCollapsed]=useState(false);
+  useEffect(()=>{try{setSidebarCollapsed(localStorage.getItem("alpine:admin-sidebar-collapsed")==="1");}catch{}},[]);
+  function toggleSidebar(){setSidebarCollapsed(previous=>{const next=!previous;try{localStorage.setItem("alpine:admin-sidebar-collapsed",next?"1":"0");}catch{}return next;});}
 
   const [modal, setModal] = useState<"menu" | "category" | "order" | "expense" | "cancel-order" | null>(null);
   const [cancelOrderId, setCancelOrderId] = useState<string | null>(null);
@@ -247,6 +250,8 @@ export function useAdminWorkspace() {
     setCategory,
     drawer,
     setDrawer,
+    sidebarCollapsed,
+    toggleSidebar,
     modal,
     setModal,
     editing,

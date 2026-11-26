@@ -50,6 +50,18 @@ fn remote_window(app: &tauri::AppHandle, label: &str, url: Url, origin: String, 
 }
 
 #[tauri::command]
+async fn detect_local_server(window:WebviewWindow)->Result<Option<String>,String>{
+    if window.label()!="main" {return Err("Use the connection screen.".into());}
+    let client=reqwest::Client::builder().redirect(reqwest::redirect::Policy::none()).timeout(std::time::Duration::from_secs(2)).build().map_err(|_|"Unable to check the server.")?;
+    let Ok(response)=client.get("http://localhost:4251/login").send().await else{return Ok(None);};
+    if !response.status().is_success(){return Ok(None);}
+    let html=response.headers().get(reqwest::header::CONTENT_TYPE).and_then(|v|v.to_str().ok()).map(|v|v.starts_with("text/html")).unwrap_or(false);
+    if !html{return Ok(None);}
+    let body=response.text().await.unwrap_or_default();
+    Ok(if body.to_lowercase().contains("alpine"){Some("http://localhost:4251".into())}else{None})
+}
+
+#[tauri::command]
 async fn open_workspace(window: WebviewWindow, app: tauri::AppHandle, origin: String) -> Result<(),String> {
     // Keep this guard even with the launcher-only generated command permission.
     if window.label()!="main" {return Err("Open a workspace from the connection screen.".into());}
@@ -79,7 +91,7 @@ fn main() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_single_instance::init(|app,_,_|{if let Some(w)=app.get_webview_window("workspace"){let _=w.show();let _=w.unminimize();let _=w.set_focus();}else{connection_screen(app);}}))
         .manage(Workspace{zoom:Mutex::new(1.0),..Default::default()})
-        .invoke_handler(tauri::generate_handler![open_workspace])
+        .invoke_handler(tauri::generate_handler![open_workspace,detect_local_server])
         .setup(|app| {
             if qa_hidden(){if let Some(main)=app.get_webview_window("main"){let _=main.hide();}}
             let connection=MenuItemBuilder::with_id("connection","Connection settings").accelerator("Ctrl+Shift+C").build(app)?;

@@ -1,6 +1,6 @@
 [package]
 name = "alpine-owner-admin"
-version = "1.0.0"
+version = "1.0.1"
 description = "Alpine Restaurant Owner and Admin desktop workspace"
 authors = ["Alpine Restaurant"]
 edition = "2021"

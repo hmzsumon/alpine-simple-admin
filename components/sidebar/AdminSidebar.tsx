@@ -58,12 +58,14 @@ export default function AdminSidebar() {
               onMouseEnter={()=>router.prefetch(n.href)}
               onFocus={()=>router.prefetch(n.href)}
               key={n.name}
+              title={n.name}
+              aria-label={n.name}
               className={page === n.name ? "selected" : ""}
               aria-current={page === n.name ? "page" : undefined}
               onClick={(event) => follow(event, n.name)}
             >
               <n.icon size={19} />
-              {n.name}
+              <span className="nav-item-label">{n.name}</span>
               {n.name === "Orders" && (
                 <span className="nav-count">{active.length}</span>
               )}

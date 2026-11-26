@@ -1,7 +1,7 @@
 /* ────────── preferences contain server addresses, never account credentials ────────── */
 export type ConnectionMode = "cloud" | "local";
 export const CLOUD_ORIGIN = "https://alpine-simple-admin.vercel.app";
-export const LOCAL_ORIGIN = "http://127.0.0.1:4251";
+export const LOCAL_ORIGIN = "http://localhost:4251";
 const key = "alpine-management-connection-v1";
 export function readConnection(): {mode:ConnectionMode; local:string} {
   try { const data:unknown=JSON.parse(localStorage.getItem(key)||"null");
