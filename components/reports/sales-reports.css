@@ -28,3 +28,10 @@
 @media(max-width:600px){.sales-reports-page .sales-filter-grid{grid-template-columns:minmax(0,1fr)}.sales-filter-actions>.primary{flex:1}.sales-category-filter{width:100%}}
 
 .hall-sales{margin-top:20px}.hall-sales>p{font-size:12px;line-height:1.7;color:var(--muted);margin:10px 0}.sales-filter-grid{grid-template-columns:1.4fr 1.4fr 1fr 1.2fr auto auto}@media(max-width:1100px){.sales-filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:600px){.sales-filter-grid{grid-template-columns:1fr}}
+
+/* Background reads never remove the report or change the status area's height. */
+.sales-status-slot{height:42px;min-width:0;display:flex;align-items:center;overflow:hidden}
+.sales-status-slot>.simple-error{margin:0;padding:7px 10px;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;line-height:20px}
+.sales-status-slot button{margin-left:8px}
+.sales-summary-card{min-height:136px}.sales-summary-card strong{white-space:nowrap;font-variant-numeric:tabular-nums}
+.sales-report-table{table-layout:fixed;min-width:760px}.sales-report-table th:first-child{width:8%}.sales-report-table th:nth-child(2){width:30%}

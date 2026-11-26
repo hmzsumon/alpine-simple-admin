@@ -1,0 +1,9 @@
+/* Exercise the authenticated bill route with fake saved orders; no browser or printer. */
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),ts=require('typescript'),React=require('react');
+test('the saved bill route skips Foodpanda automatic copies while allowing explicit printing and dine-in automatic copies',async()=>{
+ const jobId='78cde21a-526b-4c60-b1e4-8d907f305563',Auto=()=>null,Bill=()=>null;let channel='foodpanda';const box={exports:{}};
+ const source=ts.transpileModule(fs.readFileSync('app/bill/[id]/page.tsx','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText;
+ vm.runInNewContext(source,{exports:box.exports,require:name=>name==='react/jsx-runtime'?require(name):name==='next/headers'?{cookies:()=>({get:()=>({value:'fake-session'})})}:name==='next/navigation'?{redirect(){throw Error('Unexpected redirect');},notFound(){throw Error('Unexpected missing order');}}:name==='@/lib/server/api'?{SESSION_COOKIE:'session',currentUser:async()=>({id:'qa',name:'QA',role:'cashier',permissions:['orders:read','payments:collect']}),backend:async()=>({ok:true,status:200,json:async()=>({order:{id:'qa-bill',salesChannel:channel,handoffPrintId:jobId,handoffPrintClaim:{by:'qa'},status:'New',bookingState:'final',items:[]}})})}:name==='@/utils/kitchenPrinting'?{hasKitchenCopy:()=>false}:name.includes('AutomaticBillPrint')?{__esModule:true,default:Auto}:{__esModule:true,default:Bill}});
+ async function automatic(auto){const tree=await box.exports.default({params:{id:'qa-bill'},searchParams:{printJob:jobId,...(auto?{auto:'1'}:{})}});return React.Children.toArray(tree.props.children).find(child=>child.type===Auto).props;}
+ assert.equal((await automatic(true)).eligible,false);assert.equal((await automatic(false)).eligible,true);channel='dine_in';assert.equal((await automatic(true)).eligible,true);
+});

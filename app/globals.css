@@ -1813,3 +1813,6 @@ input[aria-invalid="true"],select[aria-invalid="true"],textarea[aria-invalid="tr
 .category-editor>header h2{font-size:22px;font-weight:700;color:var(--text)}.category-editor label{color:var(--text)}
 
 .station-picker{display:flex;flex-wrap:wrap;gap:9px;margin:20px 0}.station-title{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}.station-title h3{font-size:18px;font-weight:700}.station-title p{font-size:12px;color:var(--muted)}.station-edit-form{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:80;width:min(500px,92vw);max-height:80vh;overflow:auto;padding:25px;border:1px solid var(--border);border-radius:12px;background:var(--panel);box-shadow:0 0 0 100vmax #0006}.station-edit-form label{margin:14px 0}.station-edit-form h3{font-size:20px;font-weight:700}
+
+/* Reserve the viewport scrollbar so background data never shifts the workspace sideways. */
+@media screen {html{scrollbar-gutter:stable}}

@@ -1,6 +1,6 @@
 "use client";
 /* ────────── category selection filters the displayed report only ────────── */
-import {useMemo, useState} from "react";
+import {useMemo, useRef, useState} from "react";
 import {ChevronDown, Layers3} from "lucide-react";
 import type {SalesCategory, SalesItem} from "@/types/salesAnalysis";
 import {taka} from "@/utils/cashFormat";
@@ -11,6 +11,11 @@ export default function CategoryItemSales({categories, items, categoryOptions = 
   categoryOptions?: string[];
 }) {
   const [selected, setSelected] = useState("");
+  const [expanded, setExpanded] = useState<Record<string,boolean>>({});
+  const order = useRef<string[]>([]);
+  // A live total can change the sales ranking; keep the rows where the user opened them.
+  const names = new Set(categories.map(category=>category.name));
+  order.current = [...order.current.filter(name=>names.has(name)),...categories.map(category=>category.name).filter(name=>!order.current.includes(name))];
   const options = useMemo(() => {
     const names = new Map<string, string>();
     for (const value of [...categoryOptions, ...categories.map(category => category.name), ...items.map(item => item.category)]) {
@@ -20,7 +25,7 @@ export default function CategoryItemSales({categories, items, categoryOptions = 
     return [...names].sort((left, right) => left[1].localeCompare(right[1]));
   }, [categoryOptions, categories, items]);
   const activeCategory = options.some(([value]) => value === selected) ? selected : "";
-  const grouped = useMemo(() => categories
+  const grouped = useMemo(() => [...categories].sort((left,right)=>order.current.indexOf(left.name)-order.current.indexOf(right.name))
     .filter(category => !activeCategory || category.name.toLowerCase() === activeCategory)
     .map(category => ({...category, items: items.filter(item => item.category === category.name)}))
     .filter(category => category.items.length), [categories, items, activeCategory]);
@@ -37,7 +42,7 @@ export default function CategoryItemSales({categories, items, categoryOptions = 
       </label>
     </div>
     <p className="sales-report-note">Food totals exclude packing. Invoice discounts are shared across items and packing using exact paisa.</p>
-    {grouped.map(category => <details className="panel sales-category-card" key={category.name} open={!!activeCategory || category.name === categories[0]?.name}>
+    {grouped.map(category => <details className="panel sales-category-card" key={category.name} open={expanded[category.name] ?? (!!activeCategory || category.name === order.current[0])} onToggle={event=>{const open=event.currentTarget.open;setExpanded(previous=>previous[category.name]===open?previous:{...previous,[category.name]:open});}}>
       <summary>
         <span className="sales-category-icon"><Layers3 size={18}/></span>
         <span className="sales-category-title"><strong>{category.name}</strong><small>{category.items.length} item types · {category.quantity} sold</small></span>
