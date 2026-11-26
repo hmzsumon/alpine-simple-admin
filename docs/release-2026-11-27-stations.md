@@ -1,6 +1,6 @@
 # Optional station kitchen copies
 
-Counter 1.0.38, Local Server 1.1.18, Waiter 1.0.22-simple (23).
+Counter 1.0.39, Local Server 1.1.18, Waiter 1.0.22-simple (23).
 
 Admin → Menu & categories → Stations & kitchen printing manages station creation, display names (including Bengali print name), deletion of empty stations and item assignment/removal. Items keep their IDs, prices and historical bill snapshots. Items removed from a station appear under Unassigned. Each item has one preparation station.
 
