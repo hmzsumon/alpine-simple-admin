@@ -18,7 +18,7 @@ export default function OrderAutoPrinter(){const {user}=useAuth();useEffect(()=>
   const r=await fetch('/api/simple/order-print-jobs',{cache:'no-store'});if(!r.ok){if(r.status===401||r.status===403)blocked=true;throw Error('Print queue unavailable');}const data=await r.json();
   for(const job of data.jobs||[]){if(stopped)break;
    const claim=await fetch('/api/simple/order-print-claim',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...job,deviceId:device})});if(!claim.ok)continue;const saved=await claim.json();
-   // Wait for customer bill + optional kitchen copy + parcel token before claiming another order, so reloads cannot lose a claimed backlog.
+   // Wait for customer bill + optional selected kitchen copy before claiming another order, so reloads cannot lose a claimed backlog.
    if(saved.claimed&&await printBill(saved.orderId,undefined,'bill',saved.jobId,true)===false){blocked=true;notify('Auto-print paused. Check the printer and reopen the Auto Print window. Use Reprint for the last bill if needed.','error');break;}
   }
  }catch{if(!stopped&&Date.now()-lastError>=60000){lastError=Date.now();notify('Auto-print queue is unavailable. Check the connection; saved orders remain in Orders.','error');}}finally{running=false;if(again&&!stopped&&!blocked){again=false;void scan();}}};

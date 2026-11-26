@@ -26,7 +26,7 @@ export function adjustOrder(original:Order,input:Record<string,unknown>,menu:Men
    if(value.unitPrice!==undefined&&!adjustable)throw new ApiError(403,'Only Fish and items ending in Dish / ডিশ prices can be overridden.');
    const price=value.unitPrice!==undefined?cents(value.unitPrice,false)/100:old?.price??item?.price;
    if(price===null||price===undefined)throw new ApiError(400,'Enter this item’s price.');cents(price);
-   return {...(old||{menuId:item!.id,name:item!.name,nameBn:item!.nameBn,station:item!.station,category:item!.category,fulfillment:original.orderType==="takeaway"?"parcel" as const:"dine_in" as const}),quantity:Number(value.quantity),price,...(value.unitPrice!==undefined?{unitPrice:price,priceSetBy:actor.id,priceSetByName:actor.name}:{})};
+   return {...(old||{...(item!.kitchenCopy===undefined?{}:{kitchenCopy:item!.kitchenCopy}),menuId:item!.id,name:item!.name,nameBn:item!.nameBn,station:item!.station,category:item!.category,fulfillment:original.orderType==="takeaway"?"parcel" as const:"dine_in" as const}),quantity:Number(value.quantity),price,...(value.unitPrice!==undefined?{unitPrice:price,priceSetBy:actor.id,priceSetByName:actor.name}:{})};
   });
   order.discountCents=input.discount===undefined?original.discountCents||0:cents(input.discount);
   if(order.discountCents>grossBillCents(order))throw new ApiError(400,'Discount cannot exceed the revised bill.');

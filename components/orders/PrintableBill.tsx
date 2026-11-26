@@ -1,7 +1,7 @@
 /* ── Component: receipt preview and browser printing; never changes payment or order state ── */
 "use client";
-import {hasParcelTea} from '@/utils/parcelPrinting';
-import ParcelKitchenCopy from '@/components/orders/ParcelKitchenCopy';
+import {hasKitchenCopy} from '@/utils/kitchenPrinting';
+import KitchenCopy from '@/components/orders/KitchenCopy';
 import {paymentMethodBalances} from '@/utils/paymentBalances';
 import {printBill} from "@/lib/billPrinting";
 import LiveDocument from "@/components/ui/LiveDocument";
@@ -18,15 +18,14 @@ const date = (value: string) => new Date(value).toLocaleString("en-GB", { timeZo
 export default function PrintableBill({ order, printedBy, previewAt,paper="thermal",printPart="preview" }: {printPart?:"preview"|"bill"|"kitchen"|"token";paper?:"a4"|"thermal"; order: Order; printedBy: string; previewAt: string }) {
   const router = useRouter();
   const paid = paidOrder(order), cancelled = order.status === "Cancelled";
-  const parcel = order.salesChannel!=="foodpanda"&&(order.orderType==="takeaway" || order.salesChannel==="takeaway" );
   const subtotal = order.items.reduce((sum, item) => sum + item.quantity * item.price, 0);
   return <main className={"bill-preview-page "+(paper==="a4"?"paper-a4":"")}><LiveDocument/><PaperSize paper={paper}/>
     <nav className="bill-preview-toolbar" aria-label="Bill preview">
       <Link href="/orders"><ArrowLeft size={17} />Back to orders</Link>
       <button type="button" onClick={() => router.refresh()}><RefreshCw size={16} />Refresh</button>
-      <button type="button" className="bill-print-button" onClick={() => printBill(order.id)}><Printer size={17} />{parcel&&!cancelled?(hasParcelTea(order)?"Print all 3 copies":"Print bill + token"):"Print"}</button>{parcel&&!cancelled&&<button type="button" onClick={()=>printBill(order.id,undefined,"token")}>Token only</button>}{hasParcelTea(order)&&!cancelled&&<button type="button" onClick={()=>printBill(order.id,undefined,"kitchen")}>Kitchen only</button>}{paper==="thermal"&&<button type="button" onClick={()=>printDocument(true)}>Compact PDF</button>}
+      <button type="button" className="bill-print-button" onClick={() => printBill(order.id)}><Printer size={17}/>{hasKitchenCopy(order)?"Print bill + kitchen":"Print bill"}</button>{hasKitchenCopy(order)&&!cancelled&&<button type="button" onClick={()=>printBill(order.id,undefined,"kitchen")}>Kitchen only</button>}{paper==="thermal"&&<button type="button" onClick={()=>printDocument(true)}>Compact PDF</button>}
     </nav>
-    <p className="bill-preview-help">{paper==="a4"?"A4 bill preview.":"80mm counter receipt preview."} Choose Print for the printer, or Compact PDF and Save as PDF. Turn off Headers and footers; use 100% scale and the shortest suitable roll paper size. Parcel customer bills and tokens print separately. A kitchen copy is added only when the parcel contains tea. Enable Full cut / Cut after document in the printer driver. Printing does not change payment status.</p>
+    <p className="bill-preview-help">{paper==="a4"?"A4 bill preview.":"80mm counter receipt preview."} Choose Print for the printer, or Compact PDF and Save as PDF. Turn off Headers and footers; use 100% scale and the shortest suitable roll paper size. The customer bill and selected Bengali kitchen copy print separately. Parcel tokens and tea-only slips are disabled. Enable Full cut / Cut after document in the printer driver. Printing does not change payment status.</p>
     <p className="bill-preview-help"><a href="/printer-setup/ENABLE-ALPINE-AUTOCUT.ps1" download>Windows auto-cut setup</a> · <a href="/guide/printing">Printer setup guide</a></p>
     <article data-print-part={printPart} className="bill-receipt" aria-label="Customer bill">
       {(printPart==="preview"||printPart==="bill")&&<>
@@ -51,12 +50,7 @@ export default function PrintableBill({ order, printedBy, previewAt,paper="therm
       {!!order.payments?.length&&<div className="bill-payment">{paymentMethodBalances(order.payments).map(a=><p className="cash-slip-row" key={a.methodId+"|"+a.kind}><span>{a.name}</span><strong>{taka(a.cents)}</strong></p>)}{!order.payments.some(p=>p.correction&&(p.correction.from.kind==="cash"||p.correction.to.kind==="cash"))&&order.payments.some(p=>p.tenderedCashCents!==undefined)?<><p className="cash-slip-row"><span>Customer paid (cash)</span><strong>{taka(order.payments.reduce((sum,p)=>sum+(p.tenderedCashCents??p.allocations.filter(a=>a.kind==="cash").reduce((n,a)=>n+a.cents,0)),0))}</strong></p><p className="cash-slip-row"><span>Change returned</span><strong>{taka(order.payments.reduce((sum,p)=>sum+(p.changeCents||0),0))}</strong></p></>:null}</div>}
       {!!order.payments?.some(p=>p.correction)&&<p className="cash-slip-row"><span>Payment method corrected</span></p>}{!!order.payments?.some(p=>p.refund)&&<p className="cash-slip-row"><span>Customer refunded</span><strong>{taka(-(order.payments||[]).filter(p=>p.refund).reduce((s,p)=>s+p.totalCents,0))}</strong></p>}
       </>}
-      {printPart==="kitchen"&&hasParcelTea(order)&&!cancelled&&<ParcelKitchenCopy order={order}/>}{(printPart==="preview"||printPart==="token")&&parcel&&!cancelled&&<section className="parcel-token-slip" aria-label="Customer parcel token">
-        <p className="parcel-token-heading">ALPINE · CUSTOMER PARCEL TOKEN</p>
-        <strong className="parcel-token-number">{order.parcelToken||order.simpleBillNo||order.id}</strong>
-        <p className="parcel-token-invoice">{order.simpleBillNo||order.id}</p>
-        <p className="parcel-token-total">Total (BDT): <strong>{amount(total(order))}</strong></p><p className="parcel-token-context">{order.simpleCounterName||"Main counter"} · {paid?"Paid":"Payment pending"}</p>
-      </section>}
+      {(printPart==="preview"||printPart==="kitchen")&&hasKitchenCopy(order)&&!cancelled&&<KitchenCopy order={order}/>}
     </article>
   </main>;
 }

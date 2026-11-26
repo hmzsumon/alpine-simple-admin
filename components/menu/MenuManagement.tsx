@@ -9,6 +9,7 @@ import { useState } from "react";
 import Link from "next/link";
 import MenuImportPanel from "./MenuImportPanel";
 import MenuCodeUpdatePanel from "./MenuCodeUpdatePanel";
+import KitchenCopySettings from "./KitchenCopySettings";
 import { useAuth } from "@/providers/AuthProvider";
 import { useAdminContext } from "@/context/AdminContext";
 import { Plus, Trash2, FileSpreadsheet } from "lucide-react";
@@ -23,6 +24,7 @@ export default function MenuManagement() {
   const { can } = useAuth();
   const [showImport, setShowImport] = useState(false);
   const [showCodes,setShowCodes]=useState(false);
+  const [showKitchen,setShowKitchen]=useState(false);
   /* ────────── workspace state ────────── */
   const {
     data,
@@ -47,7 +49,8 @@ export default function MenuManagement() {
           <p>Price, Code and Bengali names in the menu</p>
         </div>
         <div className="menu-actions">
-        <Link href="/menu-code-print" target="_blank" className="secondary">Print item codes</Link>
+        {can("menu:manage")&&<button type="button" className="secondary" disabled={busy||mode!=="database"} onClick={()=>setShowKitchen(true)}>Kitchen copy items</button>}
+        <Link href="/menu-code-print" target="_blank" className="secondary">Print item codes</Link><Link href="/menu/categories/Uncategorized" className="secondary">Uncategorized items</Link>
         {can("menu:manage")&&<button type="button" className="secondary" disabled={busy||showImport||showCodes||mode!=="database"} onClick={()=>setShowCodes(true)}>একসঙ্গে কোড আপডেট</button>}
         {can("menu:manage") && <button type="button" className="secondary" disabled={busy || showImport || mode !== "database"} onClick={() => setShowImport(true)}><FileSpreadsheet size={16}/>Excel Import / Update</button>}
         <button className="secondary" disabled={!can("menu:manage")}
@@ -69,6 +72,7 @@ export default function MenuManagement() {
       {showImport && <MenuImportPanel close={() => setShowImport(false)} />}
       {showCodes&&<MenuCodeUpdatePanel close={()=>setShowCodes(false)}/>}
       <CategoryManagement />
+      {showKitchen&&<KitchenCopySettings close={()=>setShowKitchen(false)}/>}
       <div className="filters">
         <SearchBox value={search} onChange={setSearch} />
         <SearchableSelect

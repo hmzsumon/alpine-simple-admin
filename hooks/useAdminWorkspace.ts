@@ -1,3 +1,4 @@
+import {categoryName,sameCategory} from "@/utils/categoryItems";
 import {createReadQueue,reconcileCollections} from "@/utils/readQueue";
 /* ────────── imports ────────── */
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -120,13 +121,13 @@ export function useAdminWorkspace() {
 
   // Include empty saved categories while retaining the original menu categories.
   const categories = useMemo(()=> Array.from(new Map(
-    [...(data.categories || []), ...data.menu.map((i) => i.category)]
+    [...(data.categories || []), ...data.menu.map((i) => categoryName(i.category))]
       .map((name) => [name.toLowerCase(), name])
   ).values()),[data.categories,data.menu]);
 
   const filteredMenu = useMemo(()=> data.menu.filter(
     (i) =>
-      (category === "All categories" || i.category === category || (i.code && i.code === normalizeItemCode(search.replace(/^(?:কোড|code)\s*/i, "")))) &&
+      (category === "All categories" || sameCategory(i.category,category) || (i.code && i.code === normalizeItemCode(search.replace(/^(?:কোড|code)\s*/i, "")))) &&
       matchesMenuSearch(i, search)
   ).sort((a, b) => (a.code || "999999").localeCompare(b.code || "999999", "en", { numeric: true })),[data.menu,category,search]);
 

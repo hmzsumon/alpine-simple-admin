@@ -14,7 +14,7 @@ function run(job:Job,part:Part){
   if(event.origin!==window.location.origin||event.source!==frame.contentWindow||event.data?.type!=="alpine:bill-print"||event.data.jobId!==job.jobId||(event.data.part||"bill")!==part)return;
   if(event.data.status==="started")return;
   if(event.data.status==="error"){fail(job.confirmationId?"The payment is saved. Printing could not start. Use Reprint bill or Token only; do not collect payment again.":"The order is saved. Printing could not start. Use Reprint bill or Token only and check the saved payment status.");return;}
-  if(event.data.status==="finished"||event.data.status==="skipped")finish(event.data.hasToken===true&&part==="bill"?(event.data.hasKitchen===true?"kitchen":"token"):event.data.hasToken===true&&part==="kitchen"&&job.first==="bill"?"token":null);
+  if(event.data.status==="finished"||event.data.status==="skipped")finish(part==="bill"&&event.data.hasKitchen===true?"kitchen":null);
  };
  const timeout=setTimeout(()=>fail("Printing could not be verified. Check the printer before requesting another copy."),120000);
  window.addEventListener("message",message);

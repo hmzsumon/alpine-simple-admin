@@ -10,7 +10,7 @@ export const guides:Guide[]=[
     "Download the latest installer at https://alpine-simple-admin.vercel.app/download/windows and install it on the cashier PC. The initial installer has no commercial Windows publisher certificate; verify that it came from this Alpine link.",
     "Open Alpine Cash Counter. Connect to the internet and sign in with your own cashier account. Choose the correct vacant counter, or accept its handover invitation. Owner/Admin continue using the web panel for management.",
     "Open the cash day with the actual petty cash. In Settings choose the installed physical 80mm receipt printer and RONGTA / 80mm - clean font + auto cut. Use Print test slip once. Clean-font mode prints clear Arial text with spaced columns and cuts automatically. Thermal text - compatibility mode remains available if needed. For other printers choose Windows driver, then configure 80mm roll paper, no margins and Full cut in that driver.",
-    "Take a dine-in, Parcel or Foodpanda order. Search code/name, choose item, enter quantity and press Enter. The search clears after adding. F5 saves the local order. Dine-in and Parcel print automatically; Parcel has a separate token with total payable and a larger tea-only kitchen slip with room for a Paid stamp when tea is ordered. Foodpanda needs only its reference, opens Foodpanda receivable collection and never prints automatically. Collection does not automatically print a second copy.",
+    "Take a dine-in, Parcel or Foodpanda order. Search code/name, choose item, enter quantity and press Enter. The search clears after adding. F5 saves the local order. Dine-in, Parcel and Foodpanda print one customer bill automatically. Admin selects menu items for an additional Bengali kitchen copy with prices, quantities, waiter, date/time and selected-item total. Separate parcel tokens and tea-only slips are disabled. Foodpanda needs no external reference and opens Foodpanda receivable collection. Collection does not automatically print a second copy.",
     "Disconnecting internet does not stop local orders, collections or USB printing during the valid signed-in session. The session expires after eight hours; reconnect to sign in again. Waiter phones require internet and reach the PC when it reconnects. LAN printers still need the local network.",
     "Right-click New order, choose New order window or press Ctrl+Shift+N for a separate Windows order window. Its title identifies Dine-in / Parcel / Foodpanda. Closed unsaved windows can be resumed under Order windows. Keep this app open for incoming waiter orders. Watch the to-sync count. Admin menu/staff changes arrive while connected; saved invoices keep their prices. A drawer is reserved to one desktop; the browser shows synced figures and blocks conflicting writes.",
     "To share a drawer, Owner/Admin opens Counter setup → Combine counters. Sync, close and release the source counter first, choose the source and receiving counter, then save. Press Sync now in the receiving Windows app. Its table list includes both halls with hall names and filters. Cached combined routing works offline. Use Separate to return the source hall to its own counter; existing bills keep their original drawer.",
@@ -169,7 +169,7 @@ export const guides:Guide[]=[
     "audience": "Owner / Admin / Cashier / Waiter",
     "steps": [
       "Sign in with a Parcel & Foodpanda waiter account.",
-      "Choose Parcel or Foodpanda and enter the actual external order number.",
+      "Choose Parcel or Foodpanda. No external Foodpanda reference is required.",
       "Select the items, review quantities and submit the order.",
       "The cashier allocates the bill to the actual received method or Foodpanda receivable."
     ],
@@ -177,13 +177,13 @@ export const guides:Guide[]=[
       "title": "Worked example",
       "steps": [
         "Foodpanda sends an order for BDT 500.",
-        "The parcel waiter enters its actual reference.",
+        "The parcel waiter enters the items without an external reference.",
         "No money has arrived, so the cashier chooses Foodpanda receivable."
       ],
       "result": "Sales and platform receivables each show BDT 500. Drawer cash does not increase."
     },
     "tips": [
-      "The same external reference cannot be entered twice. Gross order value is tracked; commissions and platform settlement are not automated."
+      "Foodpanda does not require an external reference or duplicate-reference review. Retrying a saved request uses the same request ID and does not create a second order. Gross order value is tracked; commissions and platform settlement are not automated."
     ],
     "related": [
       "quick-start",
@@ -289,24 +289,24 @@ export const guides:Guide[]=[
     "slug": "printing",
     "title": "Automatic bill printing and printer setup",
     "category": "Reporting",
-    "summary": "Print one bill automatically when an order is confirmed, plus a separate parcel token with total payable; a kitchen copy is added only for parcel tea. Reprint only when needed.",
+    "summary": "Print one customer bill when an order is confirmed, with one Bengali kitchen copy for the menu items selected by Admin. Reprint only when needed.",
     "audience": "Owner / Admin / Cashier",
     "steps": [
       "On each cashier PC, install the correct receipt-printer driver and select its 80mm / 72.1mm printable media. Keep portrait orientation, 100% scale, no margins and browser headers/footers off.",
       "Enable Full cut / Cut after document in Windows Printing preferences. For the supported Rongta 80Normal driver, download the Windows auto-cut setup below and run it in Windows PowerShell as Administrator. If Chrome is installed, it also creates an Alpine Cashier - Auto Print desktop shortcut with a separate printing profile.",
       "If Windows blocks the downloaded script, run it from an elevated PowerShell window with: powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$env:USERPROFILE\\Downloads\\ENABLE-ALPINE-AUTOCUT.ps1\". Select the exact receipt printer if asked. This changes only that printer and saves the original preferences.",
       "Download Auto Print setup and run it on the cashier PC: powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$env:USERPROFILE\\Downloads\\ENABLE-ALPINE-AUTO-PRINT.ps1\". Choose the receipt printer. This creates an Alpine Cashier - Auto Print shortcut with a separate Chrome printing profile. Open that shortcut, sign in as the responsible cashier and keep its window open.",
-      "Saving a counter order or confirming a waiter booking queues one automatic bill. Editable bookings do not print. Parcel orders print a customer bill and matching token with total payable. Foodpanda is manually printable only. A compact kitchen copy is added only when the parcel contains tea; it lists only tea quantities/instructions and the token reference. Payment collection does not print another copy; use Reprint bill if the bill changes or another copy is needed.",
-      "Use Kitchen only or Token only when just that copy is needed. A reprint never collects another payment. Ordinary browser windows may show three print dialogs; use the cashier Chrome kiosk-printing shortcut for unattended printing.",
+      "In Menu & categories, open Kitchen copy items, tick the items to print and save. Sync the counters. Saving a counter order or confirming a waiter booking queues one customer bill plus one Bengali kitchen copy if selected items are present. This applies to Dine-in, Parcel and Foodpanda. Editable bookings do not print. Separate parcel tokens and tea-only slips are disabled. Payment collection does not print another copy.",
+      "Use Bill only or Kitchen only when just that copy is needed. A reprint never collects another payment. Browser printing can show one dialog per copy; use the cashier Chrome kiosk-printing shortcut for unattended printing.",
       "Use Compact PDF only when saving a PDF. Physical receipt printing uses the driver paper size and starts at the top."
     ],
     "example": {
-      "title": "Parcel customer, kitchen and token copies",
+      "title": "Customer bill and selected kitchen copy",
       "steps": [
         "A parcel order has invoice B-20261117-C01-0005 and parcel token P-0005.",
-        "When the parcel order is confirmed, the active counter cashier receives one customer bill and one separate token automatically; a parcel containing tea also receives a kitchen copy."
+        "When the order is confirmed, its counter receives one customer bill and one Bengali kitchen copy containing only the items selected by Admin."
       ],
-      "result": "With a working auto-cutter and Full cut enabled in the driver, each document is cut at its end. The kitchen receives its item/quantity copy; the customer receives the matching token showing total payable."
+      "result": "With a working auto-cutter and Full cut enabled in the driver, each document is cut at its end. The kitchen receives selected item names, prices, quantities, waiter, date/time and their total; the customer receives the bill."
     },
     "tips": [
       "Keep one Auto Print PC active for each counter. A second automatic-print PC with the same cashier can claim a job first, although the same job cannot print twice automatically.",
@@ -314,7 +314,7 @@ export const guides:Guide[]=[
       "Printer preferences apply to each Windows PC separately. Logging into Alpine on another PC does not change that PC's printer driver settings.",
       "If beeping, flashing or Cutter Error returns, stop printing and check the cutter/paper path. A driver setting cannot repair a jammed or faulty cutter. The previous preferences are backed up under LOCALAPPDATA\\Alpine\\PrinterSetup.",
       "The receipt uses a conservative 68mm outer width so the amount column stays clear of the print edge. If a different printer still clips, verify its paper width and 100% scale.",
-      "For excess blank paper above a token, use Rongta PrinterTool: USB > Set Printer > PaperSave > Delete Empty Space At The Top > Enable > Set. Keep line and barcode compression at None. Use a zero-margin cashier printing profile. This trims blank print content; a physical gap can still remain between the print head and cutter. If zero-margin output still leaves that gap, do not reduce the required cutter feed."
+      "For excess blank paper above a receipt, use Rongta PrinterTool: USB > Set Printer > PaperSave > Delete Empty Space At The Top > Enable > Set. Keep line and barcode compression at None. Use a zero-margin cashier printing profile. This trims blank print content; a physical gap can still remain between the print head and cutter. If zero-margin output still leaves that gap, do not reduce the required cutter feed."
     ],
     "related": [
       "closing",

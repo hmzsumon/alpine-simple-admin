@@ -13,6 +13,7 @@ export type MenuItem = {
   id: string;
   name: string;
   category: string;
+  kitchenCopy?: boolean;
   station: Station;
   price: number | null;
   active: boolean;
@@ -37,7 +38,7 @@ export type Order = { handoffPrintId?:string;finalizedAt?:string;handoffPrintCla
     unitPrice?:number;priceSetBy?:string;priceSetByName?:string;menuId: string;
     name: string;
     nameBn?: string;
-    category?:string;quantity: number;
+    kitchenCopy?:boolean;category?:string;quantity: number;
     price: number;
  note?:string;
     station: Station;

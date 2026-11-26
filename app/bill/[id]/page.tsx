@@ -1,4 +1,4 @@
-import {hasParcelTea} from '@/utils/parcelPrinting';
+import {hasKitchenCopy} from '@/utils/kitchenPrinting';
 import AutomaticBillPrint from "@/components/orders/AutomaticBillPrint";
 /* ────────── authenticated cashier/owner bill preview, using the saved order ────────── */
 import { cookies } from "next/headers";
@@ -19,8 +19,8 @@ export default async function Page({ params,searchParams }: { searchParams?:{pri
   if (!response.ok) return <main style={{ padding: 30 }}>Could not load the bill. Refresh and try again.</main>;
   const data: { order: Order } = await response.json();
   const jobId=searchParams?.printJob,validJob=!!jobId&&/^[a-f0-9-]{36}$/i.test(jobId),payment=searchParams?.payment;
-  const part=searchParams?.part==="token"?"token":searchParams?.part==="kitchen"?"kitchen":"bill",hasToken=data.order.salesChannel!=="foodpanda"&&data.order.status!=="Cancelled"&&(data.order.orderType==="takeaway"||data.order.salesChannel==="takeaway");
-  if(validJob&&part!=="bill"&&(!hasToken||part==="kitchen"&&!hasParcelTea(data.order)))notFound();
-  const eligible=validJob&&(searchParams?.auto!=="1"||(data.order.salesChannel!=="foodpanda"&&data.order.handoffPrintId===jobId&&data.order.handoffPrintClaim?.by===user.id&&data.order.bookingState!=="booking"&&data.order.status!=="Cancelled"))&&(!payment||(data.order.paymentStatus==="paid"&&data.order.payments?.some(p=>p.id===payment&&p.by===user.id)===true));
-  return <><PrintableBill printPart={validJob?part:"preview"} order={data.order} paper={validJob||user.role==="cashier"?"thermal":"a4"} printedBy={user.name} previewAt={new Date().toISOString()} />{validJob&&<AutomaticBillPrint jobId={jobId!} userId={user.id} orderId={data.order.id} eligible={eligible} part={part} hasToken={hasToken} hasKitchen={hasParcelTea(data.order)}/>}</>;
+  const part=searchParams?.part==="token"?"token":searchParams?.part==="kitchen"?"kitchen":"bill",hasToken=false;
+  if(validJob&&(part==="token"||part==="kitchen"&&!hasKitchenCopy(data.order)))notFound();
+  const eligible=validJob&&(searchParams?.auto!=="1"||(data.order.handoffPrintId===jobId&&data.order.handoffPrintClaim?.by===user.id&&data.order.bookingState!=="booking"&&data.order.status!=="Cancelled"))&&(!payment||(data.order.paymentStatus==="paid"&&data.order.payments?.some(p=>p.id===payment&&p.by===user.id)===true));
+  return <><PrintableBill printPart={validJob?part:"preview"} order={data.order} paper={validJob||user.role==="cashier"?"thermal":"a4"} printedBy={user.name} previewAt={new Date().toISOString()} />{validJob&&<AutomaticBillPrint jobId={jobId!} userId={user.id} orderId={data.order.id} eligible={eligible} part={part} hasToken={hasToken} hasKitchen={hasKitchenCopy(data.order)}/>}</>;
 }
