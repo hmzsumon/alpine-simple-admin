@@ -12,3 +12,8 @@ local-server/dist/
 local-server/runtime/
 local-server/release/
 local-server/node_modules/
+management-desktop/node_modules/
+management-desktop/dist/
+management-desktop/src-tauri/target/
+management-desktop/src-tauri/gen/
+management-desktop/release/

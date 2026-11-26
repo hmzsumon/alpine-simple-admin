@@ -39,6 +39,7 @@
   "exclude": [
     "node_modules",
     ".next-dev",
-    "desktop"
+    "desktop",
+    "management-desktop"
   ]
 }

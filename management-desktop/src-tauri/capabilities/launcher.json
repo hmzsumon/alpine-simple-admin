@@ -1,0 +1,8 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "launcher",
+  "description": "Only the bundled connection screen may open a validated workspace. Remote pages have no native permissions.",
+  "local": true,
+  "windows": ["main"],
+  "permissions": ["core:default", "allow-open-workspace"]
+}
