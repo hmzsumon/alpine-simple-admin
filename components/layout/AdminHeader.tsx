@@ -12,7 +12,7 @@ export default function AdminHeader() {
   return (
     <header className="topbar">
       <div className="breadcrumb">
-        <button className="desktop-sidebar-toggle icon-button" aria-label={sidebarCollapsed?"Expand sidebar":"Collapse sidebar"} aria-expanded={!sidebarCollapsed} onClick={toggleSidebar}>{sidebarCollapsed?<PanelLeftOpen size={20}/>:<PanelLeftClose size={20}/>}</button>
+        <button type="button" className="desktop-sidebar-toggle icon-button" aria-label={sidebarCollapsed?"Expand sidebar":"Collapse sidebar"} title={sidebarCollapsed?"Expand sidebar":"Collapse sidebar"} aria-controls="workspace-sidebar" aria-expanded={!sidebarCollapsed} onClick={toggleSidebar}>{sidebarCollapsed?<PanelLeftOpen size={20}/>:<PanelLeftClose size={20}/>}</button>
         <button
           className="mobile-toggle icon-button"
           aria-label="Open navigation"

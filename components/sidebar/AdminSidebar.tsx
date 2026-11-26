@@ -10,6 +10,8 @@ import {
   ArrowUpRight,
   ChevronDown,
   CircleHelp,
+  PanelLeftClose,
+  PanelLeftOpen,
   UtensilsCrossed,
 } from "lucide-react";
 import { useAuth } from "@/providers/AuthProvider";
@@ -21,7 +23,8 @@ export default function AdminSidebar() {
   const router=useRouter();
   const { user, logout } = useAuth();
   /* ────────── workspace state ────────── */
-  const { page, drawer, active, navigate } = useAdminContext();
+  const { page, drawer, active, navigate, sidebarCollapsed, toggleSidebar } = useAdminContext();
+  const sidebarAction = sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar";
 
   // Leave modified clicks to the browser so new tabs preserve native link behavior.
   function follow(event: MouseEvent<HTMLAnchorElement>, name: string) {
@@ -31,13 +34,18 @@ export default function AdminSidebar() {
   }
 
   return (
-    <aside className={`sidebar ${drawer ? "open" : ""}`}>
+    <aside id="workspace-sidebar" className={`sidebar ${drawer ? "open" : ""}`}>
       <a className="brand" href="/" aria-label="Alpine home">
         <img className="admin-brand-image" src="/alpine-brand.png" alt="Alpine Restaurant" width={44} height={44} />
         <span>
           ALPINE<small>RESTAURANT</small>
         </span>
       </a>
+      <button type="button" className="sidebar-nav-toggle" aria-label={sidebarAction}
+        title={sidebarAction} aria-expanded={!sidebarCollapsed} aria-controls="workspace-sidebar" onClick={toggleSidebar}>
+        {sidebarCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+        <span>{sidebarAction}</span>
+      </button>
       <div className="location">
         <span className="location-icon">
           <UtensilsCrossed size={17} />
