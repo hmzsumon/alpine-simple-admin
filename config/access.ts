@@ -19,6 +19,7 @@ export const routePermissions: Record<string, Permission> = {
   "/users": "users:manage",
 };
 export function canAccessPath(user: AuthUser, path: string) {
+  if(path==="/kitchen-orders"||path.startsWith("/kitchen-orders/"))return ["owner","admin"].includes(user.role)&&user.permissions.includes("orders:read");
   if(path==="/server-control"||path.startsWith("/server-control/"))return user.role==="owner";
   if(path==="/developer"||path.startsWith("/developer/"))return user.role==="owner";
   // Employee profiles are role restricted even if cashier permissions are delegated.

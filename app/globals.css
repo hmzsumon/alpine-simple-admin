@@ -1816,3 +1816,6 @@ input[aria-invalid="true"],select[aria-invalid="true"],textarea[aria-invalid="tr
 
 /* Reserve the viewport scrollbar so background data never shifts the workspace sideways. */
 @media screen {html{scrollbar-gutter:stable}}
+
+/* Owner/Admin preparation history intentionally exposes read-only records. */
+.kitchen-history{padding:24px}.kitchen-history>header,.kitchen-history-slip>header{display:flex;justify-content:space-between;gap:16px;align-items:start}.kitchen-history p{font-size:12px;color:var(--muted);line-height:1.8}.kitchen-history .simple-form{margin:22px 0}.kitchen-history-status{min-height:34px;font-size:12px;color:var(--muted)}.kitchen-history-slip{border:1px solid var(--border);border-radius:10px;padding:18px;margin:14px 0}.kitchen-history-slip>header span{font-size:12px}.kitchen-history-slip>strong{display:block;text-align:right;margin-top:12px}.kitchen-history>footer{display:flex;justify-content:flex-end;gap:12px;margin-top:20px}

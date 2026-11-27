@@ -17,7 +17,7 @@ import type { Station } from "@/types";
 
 /* ────────── navigation ────────── */
 export const navigation = [
- {name:"Overview",href:"/dashboard",icon:LayoutDashboard},{name:"Orders",href:"/orders",icon:ShoppingBag},
+ {name:"Overview",href:"/dashboard",icon:LayoutDashboard},{name:"Orders",href:"/orders",icon:ShoppingBag},{name:"Kitchen orders",href:"/kitchen-orders",icon:ShoppingBag},
  {name:"Cash register",href:"/cash",icon:Banknote},{name:"Sales & category reports",href:"/reports",icon:BookOpen},{name:"Payment methods",href:"/payment-methods",icon:Wallet},
  {name:"Counter setup",href:"/cash-counters",icon:Settings2},
  {name:"Menu & categories",href:"/menu",icon:BookOpen},{name:"Tables & floors",href:"/tables",icon:Table2},{name:"Staff & permissions",href:"/users",icon:Users},

@@ -12,7 +12,7 @@ class Controller{
   this.cloudFetch=cloudFetch;this.diagnostic=diagnostic;
   this.root=root;this.runtime=runtime;this.nodeExe=nodeExe;this.safeStorage=safeStorage;this.progress=progress;this.startupTimeout=startupTimeout;this.busy=false;this.children=[];this.error='';
   fs.mkdirSync(root,{recursive:true});this.require=createRequire(path.join(runtime,'api/package.json'));this.MongoClient=this.require('mongoose').mongo.MongoClient;this.crypto=this.require('./dist/utils/hubCrypto');this.collections=this.require('./dist/config/hub').HUB_COLLECTIONS;
-  this.file=path.join(root,'server-config.bin');const storageHost=processHost();this.safeStorage=protectedStorage(safeStorage,storageHost);this.settings=new ConfigStore(this.file,this.safeStorage,progress);this.config=this.load();this.stopping=false;this.startFlight=null;
+  this.file=path.join(root,'server-config.bin');const storageHost=processHost();this.safeStorage=protectedStorage(safeStorage,storageHost);this.settings=new ConfigStore(this.file,this.safeStorage,progress);this.config=this.load();this.stopping=false;this.startFlight=null;this.adminHealthFailures=0;this.cachedService=null;this.serviceRead=null;
  }
  load(){return this.settings.load();}
  save(){this.settings.save(this.config);}
@@ -93,7 +93,7 @@ class Controller{
  }
  async stopChild(child){
   if(!child)return;this.children=this.children.filter(p=>p!==child);
-  if(child.serverRole==='api')this.apiReady=false;
+  if(child.serverRole==='api'){this.apiReady=false;this.cachedService=null;}
   if(child.exitCode===null&&!child.signalCode)await new Promise(resolve=>{const timer=setTimeout(resolve,8000);child.once('exit',()=>{clearTimeout(timer);resolve();});try{child.kill();}catch{clearTimeout(timer);resolve();}});
   // Windows closes job children after the host handle exits. Wait for that
   // bounded cleanup before trying to bind the same port on a restart.
@@ -112,9 +112,11 @@ class Controller{
  }
  async stopApps(){const children=[...this.children];await Promise.all(children.map(child=>this.stopChild(child)));}
  async stop(){this.stopping=true;await this.stopApps();await this.startFlight?.catch(()=>{});await this.engine?.stop();}
- async healthy(){if(this.children.length!==2||this.children.some(p=>p.exitCode!==null||p.killed)||!this.engineRunning())return false;try{const [api,admin]=await Promise.all([localResponse('http://127.0.0.1:'+this.config.port+'/local-server/status',{headers:{'x-alpine-local-key':this.config.internal},timeout:2000}),localResponse('http://127.0.0.1:'+this.config.adminPort+'/login',{timeout:2000})]);return api.ok&&!!api.json().capture&&admin.ok;}catch{return false;}}
+ async restartAdmin(){const child=this.children.find(p=>p.serverRole==='admin');if(child)await this.stopChild(child);const c=this.config;await freePort(c.adminPort);const next=this.launch(path.join(this.runtime,'admin/server.js'),path.join(this.runtime,'admin'),{...process.env,NODE_ENV:'production',PORT:String(c.adminPort),HOSTNAME:'127.0.0.1',API_URL:'http://127.0.0.1:'+c.port,COOKIE_SECURE:'false'});await this.ready('http://127.0.0.1:'+c.adminPort+'/login',next);this.adminHealthFailures=0;this.diagnostic('Admin screen recovered; local order API retained.');}
+ async healthy(){const apiChild=this.children.find(p=>p.serverRole==='api');if(!apiChild||apiChild.exitCode!==null||apiChild.killed||!this.engineRunning())return false;try{const api=await localResponse('http://127.0.0.1:'+this.config.port+'/local-server/status',{headers:{'x-alpine-local-key':this.config.internal},timeout:8000});if(!api.ok||!api.json().capture)return false;}catch{return false;}let adminReady=false;const adminChild=this.children.find(p=>p.serverRole==='admin');if(adminChild&&adminChild.exitCode===null&&!adminChild.killed)try{adminReady=(await localResponse('http://127.0.0.1:'+this.config.adminPort+'/login',{timeout:5000})).ok;}catch{}if(adminReady)this.adminHealthFailures=0;else if(++this.adminHealthFailures>=3)try{await this.restartAdmin();}catch{this.diagnostic('Admin recovery is pending; local order API retained.');}return true;}
  async cancel(){if(this.config?.phase==='active')throw Error('An active server cannot be cancelled.');if(!this.config?.setupToken)throw Error('An active server cannot be cancelled.');await this.stopApps();const status=await this.call('hub/status',this.config.setupToken);if(status.phase!=='inactive')await this.call('hub/cancel',this.config.setupToken,{});await this.engine?.stop();this.engine=null;this.config.phase='new';this.config.dbName='alpine_hub_restaurant_'+crypto.randomBytes(8).toString('hex');delete this.config.grant;delete this.config.setupToken;this.save();}
- async status(){const c=this.config;let service=null;if(c?.phase==='active'){try{const response=await localResponse('http://127.0.0.1:'+c.port+'/local-server/status',{headers:{'x-alpine-local-key':c.internal},timeout:1500});if(response.ok)service=await response.json();}catch{}}
+ async readService(){if(this.serviceRead)return this.serviceRead;const c=this.config;this.serviceRead=(async()=>{try{const response=await localResponse('http://127.0.0.1:'+c.port+'/local-server/status',{headers:{'x-alpine-local-key':c.internal},timeout:5000});if(response.ok){const service=await response.json();this.cachedService={at:Date.now(),service};return service;}}catch{}return this.cachedService&&Date.now()-this.cachedService.at<30000?this.cachedService.service:null;})().finally(()=>{this.serviceRead=null;});return this.serviceRead;}
+ async status(){const c=this.config;const service=c?.phase==='active'?await this.readService():null;
   return {version:require('../package.json').version,database:c?.database==='sqlite'?'SQLite':'MongoDB',phase:c?.phase||'new',label:c?.label||'',addresses:addresses(c?.port||4250),admin:c?'http://127.0.0.1:'+c.adminPort:'',service,busy:this.busy,error:this.error,canCancel:!!c?.setupToken,starting:!!this.startFlight,settingsRecovered:this.settings.recovered};
  }
  async devices(){if(this.config?.phase!=='active')return {devices:[]};const response=await localResponse('http://127.0.0.1:'+this.config.port+'/local-server/devices',{headers:{'x-alpine-local-key':this.config.internal},timeout:2000});if(!response.ok)throw Error('Device status is temporarily unavailable.');return response.json();}

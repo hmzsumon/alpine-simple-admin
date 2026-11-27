@@ -6,7 +6,7 @@ export const unassignedStation:Kitchen={id:UNASSIGNED_STATION,name:'স্টে
 export const stationBengali=(station:Kitchen)=>station.nameBn||(/[\u0980-\u09ff]/.test(station.name)?station.name:({'Main Kitchen':'প্রধান কিচেন',BBQ:'বারবিকিউ',Drinks:'জুস ও পানীয়'} as Record<string,string>)[station.id]||'প্রস্তুতির স্টেশন');
 const hash=(value:unknown)=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 export function kitchenContent(order:Order){return hash([order.waiter,order.note||'',order.items.filter(line=>line.station&&line.station!==UNASSIGNED_STATION).map(line=>[line.menuId,line.station,line.name,line.nameBn||'',line.quantity,line.price,line.fulfillment||'',line.note||''])]);}
-export interface StationPrintOrder extends Order{stationTicket:{id:string;stationId:string;name:string;nameBn:string;requestedAt:string;revised:boolean;cancelled?:boolean};}
+export interface StationPrintOrder extends Order{stationTicket:{id:string;stationId:string;name:string;nameBn:string;requestedAt:string;revised:boolean;cancelled?:boolean;standalone?:boolean};}
 export interface StationDispatch{id:string;contentHash:string;sourceContentHash?:string;orderId:string;orderKey:string;counterId:string;epoch:number;dayId:string;targetDeviceId:string;at:string;tickets:{id:string;order:StationPrintOrder}[];}
 export function makeStationDispatch(order:Order,kitchens:Kitchen[],epoch:number,at:string,targetDeviceId:string,previous?:StationDispatch,menu?:Pick<MenuItem,'id'|'station'>[]):StationDispatch{
  const sourceContentHash=kitchenContent(order);

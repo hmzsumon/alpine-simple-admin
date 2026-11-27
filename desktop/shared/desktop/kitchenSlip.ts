@@ -1,0 +1,18 @@
+/* Preparation slips are print records only; they never enter the sales or payment ledger. */
+import type {Catalog} from './contracts';import type {AuthUser} from '../types/auth';import type {Order} from '../types/workspace';
+import {ApiError} from '../utils/ApiError';import {isRecord} from '../utils/authValidation';
+export interface KitchenSlip{id:string;requestId:string;number:string;at:string;counterId:string;counterName:string;deviceId:string;epoch:number;createdBy:string;createdByName:string;waiter:string;note:string;items:Order['items'];stations:NonNullable<Catalog['kitchens']>;totalCents:number;}
+export interface KitchenSlipRequest{requestId:string;at:string;waiterId?:string;note?:string;items:{menuId:string;quantity:number}[];}
+export function prepareKitchenSlip(c:Catalog,input:unknown,actor:AuthUser=c.user):KitchenSlip{
+ if(!c.stationDispatch||!c.user.permissions.includes('orders:create')||!actor.permissions.includes('orders:create'))throw new ApiError(403,'Kitchen slip access required.');
+ if(!isRecord(input)||typeof input.requestId!=='string'||!/^[a-f0-9-]{36}$/i.test(input.requestId)||typeof input.at!=='string'||!Array.isArray(input.items)||!input.items.length||input.items.length>80)throw new ApiError(400,'কিচেনের আইটেম ও পরিমাণ দিন।');
+ const at=Date.parse(input.at);if(!Number.isFinite(at)||at<Date.parse(c.issuedAt)-300000||at>Date.parse(c.expiresAt)||at>Date.now()+300000)throw new ApiError(403,'কিচেন স্লিপের সেশন শেষ। আবার লগইন করুন।');
+ const stations=c.kitchens?.filter(station=>station.id!=='Unassigned')||[],ids=new Set<string>();
+ // Skip unassigned/retired stations without blocking the other preparation slips.
+ const items:Order['items']=input.items.flatMap(row=>{if(!isRecord(row)||typeof row.menuId!=='string'||!Number.isSafeInteger(row.quantity)||Number(row.quantity)<1||ids.has(row.menuId))throw new ApiError(400,'আইটেমের পরিমাণ ঠিক করুন।');ids.add(row.menuId);const item=c.menu.find(item=>item.id===row.menuId);if(!item?.active||item.price===null)throw new ApiError(400,'চালু এবং দাম আছে এমন আইটেম বেছে নিন।');if(!stations.some(station=>station.id===item.station))return [];return [{menuId:item.id,name:item.name,nameBn:item.nameBn,station:item.station,category:item.category,price:item.price,quantity:Number(row.quantity),kitchenCopy:true}];});
+ if(!items.length)throw new ApiError(400,'বেছে নেওয়া আইটেমগুলো কোনো স্টেশনে দেওয়া নেই। প্রিন্ট হয়নি।');
+ const totalCents=items.reduce((sum,line)=>sum+Math.round(line.price*100)*line.quantity,0);if(!Number.isSafeInteger(totalCents))throw new ApiError(400,'পরিমাণ খুব বড়। ঠিক করে দিন।');
+ const waiterId=typeof input.waiterId==='string'?input.waiterId:'',waiter=waiterId?c.waiters.find(row=>row.id===waiterId):undefined;if(waiterId&&!waiter)throw new ApiError(400,'ওয়েটার বেছে নিন।');const note=typeof input.note==='string'?input.note.trim():'';if(note.length>300)throw new ApiError(400,'নোট ৩০০ অক্ষরের মধ্যে দিন।');
+ return {id:'KS-'+input.requestId,requestId:input.requestId,number:'K-'+c.deviceId.slice(0,4)+'-'+input.requestId.slice(0,8),at:input.at,counterId:c.counter.id,counterName:c.counter.name,deviceId:c.deviceId,epoch:c.epoch,createdBy:actor.id,createdByName:actor.name,waiter:waiter?.name||actor.name,note,items,stations:stations.filter(station=>items.some(item=>item.station===station.id)),totalCents};
+}
+export function kitchenSlipOrder(slip:KitchenSlip):Order{return {id:slip.id,simpleBillNo:slip.number,simpleCounterId:slip.counterId,simpleCounterName:slip.counterName,table:'KITCHEN',waiter:slip.waiter,createdBy:slip.createdBy,createdAt:slip.at,status:'New',items:slip.items,note:slip.note};}
