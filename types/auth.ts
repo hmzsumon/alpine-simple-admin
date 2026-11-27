@@ -35,12 +35,12 @@ export type Permission =
   | "printers:manage"
   | "users:manage"
   | "operations:read" | "operations:prepare" | "operations:serve";
-export interface StaffRole { id: string; name: string; baseRole: Role; permissions: Permission[]; mobileMode: "waiter" | "operator" | "none"; builtin: boolean; active: boolean; }
+export interface StaffRole { systemKey?:string; id: string; name: string; baseRole: Role; permissions: Permission[]; mobileMode: "waiter" | "operator" | "supervisor" | "none"; builtin: boolean; active: boolean; }
 export interface AuthUser {
   id: string;
   name: string;
   email: string;
-  counterId?:string;phone?: string; roleId?: string; roleName?: string; stations?: string[]; tables?: string[]; mobileMode?: "waiter" | "operator" | "none";
+  counterId?:string;phone?: string; roleId?: string; roleName?: string; stations?: string[]; tables?: string[]; mobileMode?: "waiter" | "operator" | "supervisor" | "none";
   role: Role;
   passwordMinimum?: 6 | 12;
   canDeleteOrders?: boolean;

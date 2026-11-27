@@ -8,7 +8,7 @@ export interface AuthUser {
   phone?: string;
   roleId?: string;
   roleName?: string;
-  mobileMode?: "waiter" | "operator" | "none";
+  mobileMode?: "waiter" | "operator" | "supervisor" | "none";
   stations?: string[];
   tables?: string[];
   role: Role;

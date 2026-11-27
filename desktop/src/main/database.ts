@@ -4,6 +4,7 @@ import {extendDemoMenu} from './demoMenu';
 import {WaiterDrafts} from './waiterDrafts';
 import {kitchenContent} from '../../shared/utils/stationTickets';
 import {StationQueue} from './stationQueue';
+import {BillPrints} from './billPrints';
 import {KitchenSlips} from './kitchenSlips';
 import {SyncReviews} from './syncReviews';
 import {assertSameReservation} from './serverAlias';
@@ -30,7 +31,7 @@ const getMeta=(key:string)=>{const row=db.prepare('SELECT value FROM meta WHERE 
 const setMeta=(key:string,value:unknown)=>db.prepare('INSERT INTO meta VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(key,JSON.stringify(value));
 const state=()=>{const row=db.prepare("SELECT json FROM state WHERE id='current'").get() as {json:string}|undefined;return row?JSON.parse(row.json) as Snapshot:undefined;};
 const save=(s:Snapshot)=>db.prepare("INSERT INTO state VALUES('current',?) ON CONFLICT(id) DO UPDATE SET json=excluded.json").run(JSON.stringify(s));
-const stationQueue=new StationQueue(db),kitchenSlips=new KitchenSlips(db);
+const stationQueue=new StationQueue(db),kitchenSlips=new KitchenSlips(db),billPrints=new BillPrints(db);
 const syncReviews=new SyncReviews(db,state,save,()=>getMeta('historyOrigin')||getMeta('server')||'');
 const waiterDrafts=new WaiterDrafts(db,()=>{const snapshot=state();if(!snapshot)throw Error('Connect the counter first.');const settings=getMeta('settings');if(settings?.pendingTransfer||settings?.pendingHandover)throw Error('Counter transfer is finishing.');return {snapshot,scope:fingerprint([getMeta('historyOrigin')||getMeta('server')||'',snapshot.catalog.counter.id,snapshot.catalog.epoch])};});
 /* ── Every native order window owns its draft; all windows share one financial ledger ── */
@@ -61,6 +62,7 @@ function recoveryBackup(){const target=join(dirname(file),'recovery-'+Date.now()
 function localState(actor:LocalActor){const s=state();if(!s)throw Error('Connect the counter first.');if(s.catalog.mode==='assistant')throw Error('Use the restaurant server for waiter connections.');if(getMeta('settings')?.pendingTransfer||getMeta('settings')?.pendingHandover||syncReviews.blockingError())throw Error('Counter needs cashier review before taking orders.');requireLocalActor(s,actor,checkClock());return s;}
 const assistantQueue=new AssistantQueue(db);
 const methods:Record<string,(value:any)=>unknown>={
+ billPrintReceive:(job:import('./billPrints').CustomerPrint)=>transaction(()=>{const s=state();if(!s)throw Error('Counter missing.');return billPrints.receive(s,job);}),
  kitchenDraft:(draft:unknown)=>{const s=state();if(!s)throw Error('Counter missing.');setMeta('kitchenDraft',{counterId:s.catalog.counter.id,deviceId:s.catalog.deviceId,draft});return true;},
  kitchenCreate:(input:any)=>transaction(()=>{const s=state();if(!s)throw Error('Counter missing.');const operator=getMeta('operator') as import('../../shared/desktop/contracts').OfflineCashier|undefined,now=checkClock();if(operator&&(operator.deviceId!==s.catalog.deviceId||operator.epoch!==s.catalog.epoch||now>Date.parse(operator.expiresAt)))throw Error('Cashier session expired.');const result=kitchenSlips.create(s,{...input,at:input.at||new Date(now).toISOString()},operator);setMeta('kitchenDraft',null);return result;}),
  kitchenPending:()=>{const s=state();return s?kitchenSlips.next(s):undefined;},
