@@ -1,5 +1,9 @@
 # Alpine release workflow
 
+## Counter shortcut icon
+
+The Counter shortcut and application icon must use the original restaurant logo with the word ALPINE (`public/alpine-brand.png`). The user clarified this on 2026-11-27; use this logo for the Counter assets in `public/app-icons/counter`, installer, shortcut and window. Preserve that branding in future updates unless the user asks to change it.
+
 ## Background synchronization
 
 Keep background data refresh visually quiet in every app. Preserve the mounted screen, scroll position, focused input, draft values, selected filters and expanded rows. Retain the last matching data during transient refresh failures and show a compact non-displacing error with retry. Coalesce bursts of change events; never replace a populated report with a loading screen during normal sync. Changing the requested account, permissions or report filters must still prevent stale data and exports from the previous scope.
